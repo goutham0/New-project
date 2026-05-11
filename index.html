@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ApplyPilot | AI Job Application Assistant</title>
+    <meta name="description" content="ApplyPilot helps candidates create one reusable profile, generate tailored application materials, and apply through supported employer integrations.">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="site-header" data-elevated="false">
+      <a class="brand" href="#home" aria-label="ApplyPilot home">
+        <span class="brand-mark" aria-hidden="true">A</span>
+        <span>ApplyPilot</span>
+      </a>
+      <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <nav class="site-nav" aria-label="Primary navigation">
+        <a href="#how">How It Works</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#jobs">Jobs</a>
+        <a href="#candidate">Candidate Portal</a>
+        <a href="#workspace">Demo App</a>
+        <a href="#employers">Employers</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <div class="header-actions">
+        <span class="session-pill" id="session-pill" hidden>Signed in</span>
+        <button class="ghost-button" type="button" data-modal="login" id="login-button">Login</button>
+        <button class="primary-button" type="button" data-modal="signup">Signup</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" id="home" aria-labelledby="hero-title">
+        <img class="hero-image" src="assets/platform-preview.png" alt="ApplyPilot candidate dashboard showing job matches, profile readiness, and application package review.">
+        <div class="hero-shade" aria-hidden="true"></div>
+        <div class="hero-content">
+          <p class="eyebrow">AI-powered job application assistant</p>
+          <h1 id="hero-title">AI Job Application Assistant</h1>
+          <p class="hero-copy">Build one candidate profile, discover direct employer jobs, generate tailored resumes and cover letters, and apply through supported employer integrations.</p>
+          <div class="hero-actions" aria-label="Primary calls to action">
+            <a class="primary-button large" href="#candidate">Start candidate flow</a>
+            <a class="secondary-button large" href="#jobs">Preview jobs</a>
+          </div>
+          <p class="trust-line">We submit applications only through approved employer or ATS integrations. Unsupported jobs use assisted apply, where candidates review and submit manually.</p>
+        </div>
+      </section>
+
+      <section class="section tight" id="how" aria-labelledby="how-title">
+        <div class="section-heading">
+          <p class="eyebrow">How it works</p>
+          <h2 id="how-title">One profile, many prepared applications</h2>
+          <p>The platform keeps every apply workflow candidate-approved, plan-aware, and traceable.</p>
+        </div>
+        <div class="step-grid">
+          <article class="step-card">
+            <span class="step-number">01</span>
+            <h3>Create profile</h3>
+            <p>Add legal name, contact details, authorization, education, salary range, locations, and links.</p>
+          </article>
+          <article class="step-card">
+            <span class="step-number">02</span>
+            <h3>Upload resume</h3>
+            <p>Parse the resume into structured experience, skills, education, and project data.</p>
+          </article>
+          <article class="step-card">
+            <span class="step-number">03</span>
+            <h3>Choose plan</h3>
+            <p>Free users use manual apply links. Paid users unlock tailoring, quotas, and assisted apply.</p>
+          </article>
+          <article class="step-card">
+            <span class="step-number">04</span>
+            <h3>Select jobs</h3>
+            <p>Filter by match score, remote type, direct apply support, company, and employment type.</p>
+          </article>
+          <article class="step-card">
+            <span class="step-number">05</span>
+            <h3>Review package</h3>
+            <p>Approve tailored resumes, cover letters, and screening answers before submission.</p>
+          </article>
+          <article class="step-card">
+            <span class="step-number">06</span>
+            <h3>Apply with consent</h3>
+            <p>Direct jobs submit through official APIs. Unsupported jobs use extension-assisted autofill.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section band" id="pricing" aria-labelledby="pricing-title">
+        <div class="section-heading">
+          <p class="eyebrow">Free and paid plans</p>
+          <h2 id="pricing-title">Start manually, upgrade when AI preparation saves time</h2>
+          <p>Plan limits are built around application preparation and supported direct submissions.</p>
+        </div>
+        <div class="pricing-grid">
+          <article class="price-card">
+            <div>
+              <h3>Free</h3>
+              <p class="price">$0<span>/mo</span></p>
+              <p class="muted">For profile setup, job discovery, saved jobs, and manual apply links.</p>
+            </div>
+            <ul class="feature-list">
+              <li>Create candidate profile</li>
+              <li>Upload resume</li>
+              <li>Search jobs</li>
+              <li>Manual apply links</li>
+              <li>Limited saved jobs</li>
+              <li>Basic tracker</li>
+            </ul>
+            <button class="secondary-button plan-choice" type="button" data-plan="Free">Select Free</button>
+          </article>
+          <article class="price-card featured" aria-label="Recommended plan">
+            <div class="plan-badge">Popular</div>
+            <div>
+              <h3>Pro</h3>
+              <p class="price">$29<span>/mo</span></p>
+              <p class="muted">For candidates who want tailored documents and monthly direct apply quota.</p>
+            </div>
+            <ul class="feature-list">
+              <li>AI resume tailoring</li>
+              <li>Cover letter generation</li>
+              <li>Screening answers</li>
+              <li>Limited bulk preparation</li>
+              <li>Direct apply quota</li>
+              <li>Chrome extension assisted apply</li>
+            </ul>
+            <button class="primary-button plan-choice" type="button" data-plan="Pro">Select Pro</button>
+          </article>
+          <article class="price-card">
+            <div>
+              <h3>Premium</h3>
+              <p class="price">$79<span>/mo</span></p>
+              <p class="muted">For higher application volume, advanced tracking, and priority support.</p>
+            </div>
+            <ul class="feature-list">
+              <li>Higher monthly quotas</li>
+              <li>Advanced tracker</li>
+              <li>Direct and assisted workflows</li>
+              <li>AI answer generation</li>
+              <li>Priority support</li>
+              <li>Usage analytics</li>
+            </ul>
+            <button class="secondary-button plan-choice" type="button" data-plan="Premium">Select Premium</button>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="jobs" aria-labelledby="jobs-title">
+        <div class="split-heading">
+          <div>
+            <p class="eyebrow">Job search preview</p>
+            <h2 id="jobs-title">Filter by direct apply support or assisted apply</h2>
+          </div>
+          <div class="job-tools">
+            <label class="search-box">
+              <span class="sr-only">Search jobs</span>
+              <input id="job-search" type="search" placeholder="Search title, company, skill">
+            </label>
+            <div class="control-row" role="group" aria-label="Job filters">
+              <button class="filter-button active" type="button" data-filter="all">All</button>
+              <button class="filter-button" type="button" data-filter="direct">Direct Apply</button>
+              <button class="filter-button" type="button" data-filter="assisted">Assisted Apply</button>
+              <button class="filter-button" type="button" data-filter="remote">Remote</button>
+            </div>
+          </div>
+        </div>
+        <div class="job-layout">
+          <div class="job-list" id="job-list" aria-live="polite"></div>
+          <aside class="apply-panel" aria-labelledby="apply-panel-title">
+            <h3 id="apply-panel-title">Selected applications</h3>
+            <div class="metric-row">
+              <span>Current plan</span>
+              <strong id="current-plan">Pro</strong>
+            </div>
+            <div class="metric-row">
+              <span>Direct quota</span>
+              <strong id="quota-label">12 monthly</strong>
+            </div>
+            <div class="metric-row">
+              <span>Selected</span>
+              <strong id="selected-count">0 jobs</strong>
+            </div>
+            <button class="primary-button full" type="button" id="prepare-button">Prepare applications</button>
+            <div class="package-preview" id="package-preview">
+              <p>Select paid-plan jobs to see the review package.</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section band" id="candidate" aria-labelledby="candidate-title">
+        <div class="section-heading">
+          <p class="eyebrow">Candidate portal</p>
+          <h2 id="candidate-title">Onboarding blocks direct apply until profile, resume, and plan are ready</h2>
+          <p>The candidate experience mirrors the final product flow: prepare, review, consent, submit.</p>
+        </div>
+        <div class="portal-grid summary-portal">
+          <section class="portal-panel" aria-labelledby="readiness-title">
+            <div class="panel-top">
+              <div>
+                <p class="panel-kicker">Profile readiness</p>
+                <h3 id="readiness-title">Mandatory setup</h3>
+              </div>
+              <strong id="profile-score">0%</strong>
+            </div>
+            <div class="progress-track" aria-label="Profile completion">
+              <span id="progress-bar" style="width: 0%"></span>
+            </div>
+            <div class="readiness-list" id="readiness-list"></div>
+          </section>
+
+          <section class="portal-panel" aria-labelledby="apply-modes-title">
+            <p class="panel-kicker">Apply modes</p>
+            <h3 id="apply-modes-title">Three paths, one tracker</h3>
+            <div class="mode-list">
+              <article>
+                <span>Manual</span>
+                <p>Free users open official employer links. The platform tracks click events only.</p>
+              </article>
+              <article>
+                <span>Assisted</span>
+                <p>Paid users receive tailored documents and extension-assisted autofill for unsupported jobs.</p>
+              </article>
+              <article>
+                <span>Direct</span>
+                <p>Paid users approve packages, give consent, and submit through official ATS APIs.</p>
+              </article>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="section app-section" id="workspace" aria-labelledby="workspace-title">
+        <div class="app-shell">
+          <aside class="app-sidebar" aria-label="Candidate workspace navigation">
+            <div>
+              <p class="eyebrow">Demo app</p>
+              <h2 id="workspace-title">Candidate workspace</h2>
+              <p>Everything here is usable in-browser. Data is stored locally so you can test the product flow.</p>
+            </div>
+            <nav class="workspace-tabs" aria-label="Workspace sections">
+              <button class="tab-button active" type="button" data-tab="onboarding">Onboarding</button>
+              <button class="tab-button" type="button" data-tab="profile">Profile</button>
+              <button class="tab-button" type="button" data-tab="applications">Applications</button>
+              <button class="tab-button" type="button" data-tab="admin">Admin Preview</button>
+            </nav>
+            <div class="sidebar-status">
+              <div>
+                <span>Account</span>
+                <strong id="sidebar-account">Guest</strong>
+              </div>
+              <div>
+                <span>Plan</span>
+                <strong id="sidebar-plan">Free</strong>
+              </div>
+              <div>
+                <span>Readiness</span>
+                <strong id="sidebar-readiness">0%</strong>
+              </div>
+            </div>
+          </aside>
+
+          <div class="app-main">
+            <section class="workspace-panel active" data-panel="onboarding" aria-labelledby="onboarding-title">
+              <div class="panel-top">
+                <div>
+                  <p class="panel-kicker">Setup gate</p>
+                  <h3 id="onboarding-title">Complete these steps before direct apply</h3>
+                </div>
+                <button class="secondary-button" type="button" id="seed-demo">Load demo candidate</button>
+              </div>
+              <div class="onboarding-grid">
+                <article class="setup-card" id="account-card">
+                  <h4>1. Account</h4>
+                  <p id="account-summary">Create an account or login to start the candidate flow.</p>
+                  <button class="secondary-button" type="button" data-modal="signup">Create account</button>
+                </article>
+                <article class="setup-card" id="resume-card">
+                  <h4>2. Resume</h4>
+                  <p id="resume-summary">Upload a PDF, DOCX, or TXT resume. This demo stores only the file name.</p>
+                  <label class="file-control">
+                    <input id="resume-upload" type="file" accept=".pdf,.doc,.docx,.txt">
+                    <span>Upload resume</span>
+                  </label>
+                </article>
+                <article class="setup-card" id="plan-card">
+                  <h4>3. Plan</h4>
+                  <p id="plan-summary">Free users can manually apply. Paid users can prepare AI packages.</p>
+                  <div class="compact-buttons">
+                    <button class="secondary-button plan-choice" type="button" data-plan="Free">Free</button>
+                    <button class="secondary-button plan-choice" type="button" data-plan="Pro">Pro</button>
+                    <button class="secondary-button plan-choice" type="button" data-plan="Premium">Premium</button>
+                  </div>
+                </article>
+              </div>
+              <div class="notice-panel" id="gate-message">Complete account, resume, profile, and paid plan to unlock direct apply.</div>
+            </section>
+
+            <section class="workspace-panel" data-panel="profile" aria-labelledby="profile-form-title">
+              <div class="panel-top">
+                <div>
+                  <p class="panel-kicker">Candidate profile</p>
+                  <h3 id="profile-form-title">Mandatory application information</h3>
+                </div>
+                <button class="secondary-button" type="button" id="clear-demo">Reset demo data</button>
+              </div>
+              <form class="profile-form" id="profile-form">
+                <label>
+                  <span>Legal first name</span>
+                  <input name="firstName" autocomplete="given-name" required>
+                </label>
+                <label>
+                  <span>Legal last name</span>
+                  <input name="lastName" autocomplete="family-name" required>
+                </label>
+                <label>
+                  <span>Email</span>
+                  <input name="email" type="email" autocomplete="email" required>
+                </label>
+                <label>
+                  <span>Phone</span>
+                  <input name="phone" autocomplete="tel" required>
+                </label>
+                <label>
+                  <span>City</span>
+                  <input name="city" required>
+                </label>
+                <label>
+                  <span>State</span>
+                  <input name="state" required>
+                </label>
+                <label>
+                  <span>Country</span>
+                  <input name="country" required>
+                </label>
+                <label>
+                  <span>Work authorization</span>
+                  <select name="workAuthorization" required>
+                    <option value="">Select</option>
+                    <option>Authorized to work in the US</option>
+                    <option>US citizen</option>
+                    <option>Permanent resident</option>
+                    <option>Requires authorization review</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Sponsorship required</span>
+                  <select name="sponsorshipRequired" required>
+                    <option value="">Select</option>
+                    <option>No</option>
+                    <option>Yes</option>
+                    <option>Candidate must confirm</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Current company</span>
+                  <input name="currentCompany">
+                </label>
+                <label>
+                  <span>Current title</span>
+                  <input name="currentTitle" required>
+                </label>
+                <label>
+                  <span>Years of experience</span>
+                  <input name="yearsExperience" type="number" min="0" max="60" required>
+                </label>
+                <label>
+                  <span>Highest education</span>
+                  <input name="highestEducation" required>
+                </label>
+                <label>
+                  <span>University</span>
+                  <input name="university">
+                </label>
+                <label>
+                  <span>Degree</span>
+                  <input name="degree">
+                </label>
+                <label>
+                  <span>Graduation year</span>
+                  <input name="graduationYear" type="number" min="1950" max="2035">
+                </label>
+                <label>
+                  <span>Preferred job titles</span>
+                  <input name="targetTitles" required>
+                </label>
+                <label>
+                  <span>Preferred locations</span>
+                  <input name="preferredLocations" required>
+                </label>
+                <label>
+                  <span>Remote preference</span>
+                  <select name="remotePreference" required>
+                    <option value="">Select</option>
+                    <option>Remote</option>
+                    <option>Hybrid</option>
+                    <option>Onsite</option>
+                    <option>Any</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Expected salary min</span>
+                  <input name="salaryMin" type="number" min="0" required>
+                </label>
+                <label>
+                  <span>Expected salary max</span>
+                  <input name="salaryMax" type="number" min="0" required>
+                </label>
+                <label>
+                  <span>Notice period</span>
+                  <input name="noticePeriod" required>
+                </label>
+                <label>
+                  <span>LinkedIn</span>
+                  <input name="linkedinUrl" type="url" placeholder="https://linkedin.com/in/name">
+                </label>
+                <label>
+                  <span>GitHub</span>
+                  <input name="githubUrl" type="url" placeholder="https://github.com/name">
+                </label>
+                <label class="full-field">
+                  <span>Portfolio</span>
+                  <input name="portfolioUrl" type="url" placeholder="https://your-site.com">
+                </label>
+                <button class="primary-button" type="submit">Save profile</button>
+                <p class="form-status" id="profile-status" role="status"></p>
+              </form>
+            </section>
+
+            <section class="workspace-panel" data-panel="applications" aria-labelledby="applications-title">
+              <div class="panel-top">
+                <div>
+                  <p class="panel-kicker">Tracker</p>
+                  <h3 id="applications-title">Prepared and submitted applications</h3>
+                </div>
+                <button class="secondary-button" type="button" id="clear-applications">Clear tracker</button>
+              </div>
+              <div class="application-toolbar">
+                <label class="consent-row">
+                  <input type="checkbox" id="consent-check">
+                  <span>I confirm that the information in these applications is accurate, and I authorize this platform to submit selected applications on my behalf through supported employer or ATS integrations.</span>
+                </label>
+              </div>
+              <div class="tracker-list" id="tracker-list"></div>
+            </section>
+
+            <section class="workspace-panel" data-panel="admin" aria-labelledby="admin-title">
+              <p class="panel-kicker">Operations</p>
+              <h3 id="admin-title">Admin dashboard preview</h3>
+              <div class="admin-grid">
+                <article>
+                  <span>Users</span>
+                  <strong id="admin-users">1</strong>
+                  <p>Candidates, account status, support state.</p>
+                </article>
+                <article>
+                  <span>Applications</span>
+                  <strong id="admin-applications">0</strong>
+                  <p>Drafts, review queue, submitted, failed.</p>
+                </article>
+                <article>
+                  <span>Integrations</span>
+                  <strong>4</strong>
+                  <p>Greenhouse, Lever, SmartRecruiters, employer APIs.</p>
+                </article>
+                <article>
+                  <span>AI usage</span>
+                  <strong id="admin-ai">0</strong>
+                  <p>Tailored resumes, cover letters, generated answers.</p>
+                </article>
+              </div>
+              <div class="audit-log" id="audit-log"></div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="employers" aria-labelledby="employers-title">
+        <div class="split-content">
+          <div>
+            <p class="eyebrow">For employers and partners</p>
+            <h2 id="employers-title">Official integrations keep the platform compliant</h2>
+            <p>Direct apply is reserved for ATS, employer, and job-platform APIs that allow application submission. Unsupported jobs remain candidate-submitted through assisted apply.</p>
+          </div>
+          <div class="integration-list" aria-label="Integration responsibilities">
+            <article>
+              <h3>ATS connectors</h3>
+              <p>Greenhouse, Lever, SmartRecruiters, and employer-specific APIs map candidate data, files, and questions into official fields.</p>
+            </article>
+            <article>
+              <h3>Audit trail</h3>
+              <p>Every generated package, consent event, API response, retry, failure, and admin action is logged.</p>
+            </article>
+            <article>
+              <h3>Security posture</h3>
+              <p>HTTPS, encrypted storage, signed downloads, secrets management, and no credential automation for closed platforms.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section band" aria-labelledby="architecture-title">
+        <div class="section-heading">
+          <p class="eyebrow">Final product architecture</p>
+          <h2 id="architecture-title">A frontend now, a service architecture next</h2>
+          <p>This website is ready to become the frontend shell for the backend services in your technical design.</p>
+        </div>
+        <div class="architecture-grid">
+          <article>
+            <h3>Frontend web app</h3>
+            <p>Next.js or Angular candidate portal, public website, admin console, Stripe checkout, and extension support pages.</p>
+          </article>
+          <article>
+            <h3>Java Spring Boot API</h3>
+            <p>Auth, profiles, jobs, applications, payments, notifications, audit logs, and ATS integration orchestration.</p>
+          </article>
+          <article>
+            <h3>Python AI service</h3>
+            <p>Resume parsing, requirement extraction, match scoring, tailored resume generation, cover letters, and answer drafting.</p>
+          </article>
+          <article>
+            <h3>Data layer</h3>
+            <p>PostgreSQL, object storage, Redis or queue, search index, scheduler, secrets, logs, and usage metering.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="faq" aria-labelledby="faq-title">
+        <div class="section-heading">
+          <p class="eyebrow">FAQ</p>
+          <h2 id="faq-title">Important platform boundaries</h2>
+        </div>
+        <div class="faq-list">
+          <details open>
+            <summary>Does ApplyPilot auto-apply to every job?</summary>
+            <p>No. Direct submission happens only through approved employer or ATS integrations, after candidate review and consent.</p>
+          </details>
+          <details>
+            <summary>What happens for unsupported jobs?</summary>
+            <p>The platform generates job-specific documents and answers, then the Chrome extension helps autofill the external form. The candidate reviews and submits manually.</p>
+          </details>
+          <details>
+            <summary>Can AI invent experience to improve my chances?</summary>
+            <p>No. AI can rewrite truthful bullet points, emphasize relevant skills, and reorder sections. It must not invent employers, degrees, projects, certifications, or years of experience.</p>
+          </details>
+          <details>
+            <summary>Do free candidates get direct apply?</summary>
+            <p>Free candidates can search jobs, save a limited number, and open official apply links. Direct apply and assisted apply are paid-plan workflows.</p>
+          </details>
+        </div>
+      </section>
+
+      <section class="section contact-band" id="contact" aria-labelledby="contact-title">
+        <div>
+          <p class="eyebrow">Contact</p>
+          <h2 id="contact-title">Ready for the backend build plan?</h2>
+          <p>Next steps: convert this frontend into a framework app, add authentication, Stripe, resume upload, job ingestion, AI preparation, and application tracking.</p>
+        </div>
+        <button class="primary-button large" type="button" data-modal="signup">Create candidate account</button>
+      </section>
+    </main>
+
+    <div class="modal-backdrop" id="auth-modal" hidden>
+      <section class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <button class="modal-close" type="button" aria-label="Close dialog">x</button>
+        <p class="eyebrow" id="modal-mode">Candidate access</p>
+        <h2 id="modal-title">Create your ApplyPilot account</h2>
+        <form class="auth-form">
+          <label>
+            <span>Email</span>
+            <input name="email" type="email" placeholder="you@example.com" required>
+          </label>
+          <label>
+            <span>Password</span>
+            <input name="password" type="password" placeholder="Minimum 8 characters" required>
+          </label>
+          <button class="primary-button full" type="submit">Continue</button>
+        </form>
+        <p class="modal-note">This demo creates a local browser session. Production auth, Stripe, OpenAI, and ATS APIs require backend credentials.</p>
+      </section>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
