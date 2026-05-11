@@ -40,3 +40,4 @@ No build step is required. The demo uses browser `localStorage`, so signup, prof
 ## Recommended Next Build Phase
 
 Convert this static MVP into a framework app such as Next.js, then add Java Spring Boot APIs, a Python FastAPI AI service, PostgreSQL, Stripe, OpenAI, and ATS connectors.
+# New-project
