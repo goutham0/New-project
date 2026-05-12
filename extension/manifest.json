@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "ApplyPilot Assisted Apply",
+  "version": "1.0.0",
+  "description": "Autofill candidate profile and prepared application answers on unsupported employer forms.",
+  "permissions": ["activeTab", "storage", "scripting", "tabs"],
+  "host_permissions": ["http://localhost:3000/*", "https://*/api/extension/*"],
+  "action": {
+    "default_popup": "popup/index.html",
+    "default_title": "ApplyPilot"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*/*", "http://*/*"],
+      "js": ["src/fieldMappingEngine.js", "src/apiClient.js", "src/contentScript.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

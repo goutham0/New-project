@@ -1,44 +1,119 @@
-# ApplyPilot Website
+# ApplyPilot
 
-ApplyPilot is a working static MVP for an AI-powered job application assistant.
+ApplyPilot is a full-stack MVP for an AI job application platform. It includes a polished public website, signup/login, candidate profile, resume upload, manual apply, assisted apply, direct bulk apply, applications tracker, resume tailoring, backend API routes, and a Chrome extension scaffold.
 
-## Open The Website
+## Tech Stack
 
-Open `index.html` directly in a browser:
+- Next.js App Router
+- React
+- Built-in API routes
+- Local JSON storage for development
+- PostgreSQL when `DATABASE_URL` is provided
+- Chrome extension scaffold for assisted apply
 
-```text
-C:\Users\vemul\OneDrive\Documentos\New project\index.html
+## Run Locally
+
+```bash
+npm install
+copy .env.example .env.local
+npm run dev
 ```
 
-No build step is required. The demo uses browser `localStorage`, so signup, profile data, uploaded resume file name, plan selection, prepared applications, approvals, and tracker events persist locally in the browser.
+Open:
 
-## What Works Now
+```text
+http://localhost:3000
+```
 
-- Public landing page with service positioning, pricing, job search preview, FAQ, and employer/integration messaging.
-- Demo signup/login/logout.
-- Resume upload simulation.
-- Mandatory candidate profile form.
-- Free, Pro, and Premium plan switching.
-- Searchable/filterable job list.
-- Save jobs and open employer apply links.
-- Paid-plan gating for application preparation.
-- AI application package simulation with tailored resume, cover letter, and screening answers.
-- Candidate approval, consent checkbox, direct API submission simulation, assisted apply simulation, and manual submitted state.
-- Admin dashboard preview with audit log and usage counts.
+If `DATABASE_URL` is empty, the app stores local development data in `.local-data/app.json`.
 
-## Production Inputs Needed Later
+## Deploy To Vercel
 
-- Backend stack choice and repository layout.
-- Stripe publishable key, secret key, price IDs, and webhook secret.
-- OpenAI or Azure OpenAI credentials.
-- Email provider credentials.
-- S3 or object storage bucket settings.
-- Database and queue configuration.
-- Approved ATS or employer API credentials for direct apply.
-- Chrome extension signing and distribution setup.
+1. Push this folder to GitHub.
+2. Import the repo in Vercel.
+3. Add environment variables:
+   - `SESSION_SECRET`
+   - `DATABASE_URL`
+   - `NEXT_PUBLIC_APP_URL`
+4. Deploy.
 
-## Recommended Next Build Phase
+Recommended database providers: Supabase, Neon, Vercel Postgres, or any managed PostgreSQL.
 
-Convert this static MVP into a framework app such as Next.js, then add Java Spring Boot APIs, a Python FastAPI AI service, PostgreSQL, Stripe, OpenAI, and ATS connectors.
-# New-project
-# New-project
+## Production Variables Needed
+
+Required for real deployment:
+
+```text
+SESSION_SECRET
+DATABASE_URL
+NEXT_PUBLIC_APP_URL
+```
+
+Needed for paid production features:
+
+```text
+STRIPE_SECRET_KEY
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+STRIPE_WEBHOOK_SECRET
+STRIPE_PRO_PRICE_ID
+STRIPE_PREMIUM_PRICE_ID
+OPENAI_API_KEY
+EMAIL_PROVIDER_API_KEY
+```
+
+Needed for real direct apply:
+
+```text
+GREENHOUSE_API_KEY
+LEVER_API_KEY
+SMARTRECRUITERS_API_KEY
+EMPLOYER_CONNECTOR_KEYS
+```
+
+Direct bulk apply currently uses a safe connector stub. Real submissions require approved ATS or employer API credentials.
+
+## Chrome Extension
+
+Open Chrome:
+
+```text
+chrome://extensions
+```
+
+Enable Developer Mode, choose "Load unpacked", and select the `extension` folder.
+
+The extension reads the latest prepared assisted-apply package from:
+
+```text
+/api/extension/prepared-application
+```
+
+The candidate must be logged in to ApplyPilot in the same browser.
+
+## Main Routes
+
+- `/` public website
+- `/login`
+- `/signup`
+- `/dashboard`
+- `/dashboard/profile`
+- `/dashboard/manual-apply`
+- `/dashboard/assisted-apply`
+- `/dashboard/direct-bulk-apply`
+- `/dashboard/tailor`
+- `/dashboard/applications`
+
+## API Routes
+
+- `POST /api/auth/signup`
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `GET /api/candidate/profile`
+- `PUT /api/candidate/profile`
+- `POST /api/resumes/upload`
+- `GET /api/jobs`
+- `GET /api/applications`
+- `POST /api/applications/prepare`
+- `POST /api/applications/submit`
+- `POST /api/ai/tailor`
+- `GET /api/extension/prepared-application`
