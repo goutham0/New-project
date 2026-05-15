@@ -7,7 +7,7 @@ export default function AssistedApplyPage() {
         <div className="dashboard-title">
           <p className="eyebrow">Assisted apply</p>
           <h1>Unsupported jobs with extension autofill</h1>
-          <p>Prepare application packages, then use the Chrome extension to autofill employer forms while you review and submit manually.</p>
+          <p>Search live Adzuna jobs, prepare application packages, then use the Chrome extension to autofill employer forms while you review and submit manually.</p>
         </div>
       </div>
       <div className="extension-panel" style={{ marginBottom: 16 }}>

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { getProfile, getLatestResume, createApplication, addAudit } from "@/lib/store";
-import { getJobById } from "@/data/jobs";
+import { getJobById } from "@/lib/jobs";
 import { generateApplicationPackage } from "@/lib/ai";
 
 const requiredFields = [
@@ -42,7 +42,7 @@ export async function POST(request) {
 
   const applications = [];
   for (const jobId of jobIds) {
-    const job = getJobById(jobId);
+    const job = await getJobById(jobId);
     if (!job) continue;
     if (job.applyType === "manual") continue;
     const pkg = generateApplicationPackage({ profile, resumeText: resume.content, job });

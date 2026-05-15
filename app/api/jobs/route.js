@@ -1,21 +1,31 @@
 import { NextResponse } from "next/server";
-import { jobs } from "@/data/jobs";
+import { fetchAdzunaJobs } from "@/lib/adzuna";
+import { filterSampleJobs } from "@/lib/jobs";
+import { saveCachedJobs } from "@/lib/store";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
-  const mode = searchParams.get("mode");
-  const query = (searchParams.get("q") || "").toLowerCase();
+  const mode = searchParams.get("mode") || "all";
+  const query = searchParams.get("q") || "";
+  const where = searchParams.get("where") || "";
+  const page = searchParams.get("page") || "1";
+  const jobs = [...filterSampleJobs({ mode, query })];
+  const sourceStatus = { adzuna: "skipped" };
 
-  const filtered = jobs.filter((job) => {
-    const modeMatch =
-      !mode ||
-      mode === "all" ||
-      (mode === "manual" && job.applyType === "manual") ||
-      (mode === "assisted" && job.applyType === "assisted") ||
-      (mode === "direct" && job.directApplySupported);
-    const text = `${job.title} ${job.company} ${job.location} ${job.description} ${job.skills.join(" ")}`.toLowerCase();
-    return modeMatch && (!query || text.includes(query));
-  });
+  if (mode !== "direct") {
+    try {
+      const adzuna = await fetchAdzunaJobs({ mode, query, where, page });
+      if (adzuna.jobs.length) {
+        await saveCachedJobs(adzuna.jobs);
+        jobs.push(...adzuna.jobs);
+      }
+      sourceStatus.adzuna = adzuna.status;
+      sourceStatus.adzunaCount = adzuna.count;
+    } catch (error) {
+      sourceStatus.adzuna = "error";
+      sourceStatus.message = error.message;
+    }
+  }
 
-  return NextResponse.json({ jobs: filtered });
+  return NextResponse.json({ jobs, sourceStatus });
 }

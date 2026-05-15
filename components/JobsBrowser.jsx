@@ -9,15 +9,20 @@ export default function JobsBrowser({ mode }) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState([]);
   const [status, setStatus] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [sourceStatus, setSourceStatus] = useState(null);
   const isManual = mode === "manual";
   const isDirect = mode === "direct";
   const isAssisted = mode === "assisted";
 
   useEffect(() => {
     const timer = setTimeout(async () => {
+      setLoading(true);
       const response = await fetch(`/api/jobs?mode=${mode}&q=${encodeURIComponent(query)}`);
       const data = await response.json();
       setJobs(data.jobs || []);
+      setSourceStatus(data.sourceStatus || null);
+      setLoading(false);
     }, 150);
     return () => clearTimeout(timer);
   }, [mode, query]);
@@ -58,9 +63,27 @@ export default function JobsBrowser({ mode }) {
           </button>
         )}
       </div>
+      {sourceStatus && mode !== "direct" && (
+        <p className={`status-line ${sourceStatus.adzuna === "error" ? "error-line" : ""}`}>
+          {sourceStatus.adzuna === "live" && `Live Adzuna jobs loaded${sourceStatus.adzunaCount ? ` from ${sourceStatus.adzunaCount.toLocaleString()} matching ads` : ""}.`}
+          {sourceStatus.adzuna === "not_configured" && "Add ADZUNA_APP_ID and ADZUNA_APP_KEY to show live Adzuna jobs. Sample jobs are shown for now."}
+          {sourceStatus.adzuna === "error" && "Live Adzuna jobs are unavailable right now. Sample jobs are shown for now."}
+        </p>
+      )}
+      {isDirect && (
+        <p className="status-line">
+          Direct bulk apply shows only jobs with official submit APIs. Adzuna redirect jobs are available in Manual and Assisted Apply.
+        </p>
+      )}
       {status && <p className={`status-line ${status.includes("Unable") ? "error-line" : ""}`}>{status}</p>}
       <div className="job-grid">
-        {jobs.map((job) => (
+        {loading && (
+          <div className="empty-state">
+            <strong>Loading jobs...</strong>
+            <p>Checking available job sources.</p>
+          </div>
+        )}
+        {!loading && jobs.map((job) => (
           <article className="job-card" key={job.id}>
             {!isManual ? (
               <input
@@ -83,7 +106,7 @@ export default function JobsBrowser({ mode }) {
                 <span className="tag">{job.remoteType}</span>
                 <span className="tag">{job.employmentType}</span>
                 <span className="tag">{job.source}</span>
-                <span className="tag">${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()}</span>
+                <span className="tag">{formatSalary(job)}</span>
               </div>
               <div className="job-actions">
                 <a className="text-button" href={job.applyUrl} target="_blank" rel="noreferrer">Open apply link</a>
@@ -93,7 +116,7 @@ export default function JobsBrowser({ mode }) {
             <strong className="score">{job.directApplySupported ? "API" : "Link"}</strong>
           </article>
         ))}
-        {!jobs.length && (
+        {!loading && !jobs.length && (
           <div className="empty-state">
             <strong>No jobs found.</strong>
             <p>Try a different search term.</p>
@@ -102,4 +125,13 @@ export default function JobsBrowser({ mode }) {
       </div>
     </div>
   );
+}
+
+function formatSalary(job) {
+  const min = Number(job.salaryMin || 0);
+  const max = Number(job.salaryMax || 0);
+  if (min && max) return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
+  if (min) return `From $${min.toLocaleString()}`;
+  if (max) return `Up to $${max.toLocaleString()}`;
+  return "Salary not listed";
 }

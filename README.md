@@ -9,6 +9,7 @@ ApplyPilot is a full-stack MVP for an AI job application platform. It includes a
 - Built-in API routes
 - Local JSON storage for development
 - PostgreSQL when `DATABASE_URL` is provided
+- Adzuna job search when `ADZUNA_APP_ID` and `ADZUNA_APP_KEY` are provided
 - Chrome extension scaffold for assisted apply
 
 ## Run Locally
@@ -47,7 +48,12 @@ Required for real deployment:
 SESSION_SECRET
 DATABASE_URL
 NEXT_PUBLIC_APP_URL
+ADZUNA_APP_ID
+ADZUNA_APP_KEY
+ADZUNA_COUNTRY
 ```
+
+Adzuna jobs are search/redirect listings. They are used for Manual Apply and Assisted Apply. Direct Bulk Apply remains limited to jobs where an employer or ATS submission API is available.
 
 Needed for paid production features:
 
