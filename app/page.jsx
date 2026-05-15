@@ -1,4 +1,6 @@
 import Link from "next/link";
+import PublicNav from "@/components/PublicNav";
+import { currentUser } from "@/lib/auth";
 
 const plans = [
   {
@@ -21,28 +23,14 @@ const plans = [
   }
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const user = await currentUser();
+
   return (
     <main className="site-shell">
-      <header className="topbar">
-        <Link className="brand" href="/">
-          <span className="brand-mark">A</span>
-          <span>ApplyPilot</span>
-        </Link>
-        <nav className="nav-links" aria-label="Public navigation">
-          <a href="#about">About</a>
-          <a href="#how">How it works</a>
-          <a href="#pricing">Pricing</a>
-          <a href="#apply-modes">Apply modes</a>
-        </nav>
-        <div className="actions">
-          <Link className="secondary-button" href="/login">Login</Link>
-          <Link className="primary-button" href="/signup">Signup</Link>
-        </div>
-      </header>
+      <PublicNav isAuthenticated={Boolean(user)} />
 
       <section className="hero">
-        <img src="/platform-preview.png" alt="ApplyPilot candidate dashboard preview" />
         <div className="hero-content">
           <p className="eyebrow">AI job application assistant</p>
           <h1>Apply faster with AI-assisted job applications</h1>
@@ -51,13 +39,42 @@ export default function HomePage() {
             and apply through supported employer integrations.
           </p>
           <div className="button-row">
-            <Link className="primary-button" href="/signup">Create candidate account</Link>
-            <Link className="secondary-button" href="/login">Login</Link>
+            {user ? (
+              <Link className="primary-button" href="/dashboard">Go to dashboard</Link>
+            ) : (
+              <>
+                <Link className="primary-button" href="/signup">Create candidate account</Link>
+                <Link className="secondary-button" href="/login">Login</Link>
+              </>
+            )}
           </div>
           <p className="trust-line">
             Direct apply is enabled only for official API-supported jobs. Unsupported jobs use assisted apply and
             candidate-reviewed browser autofill.
           </p>
+        </div>
+        <div className="hero-preview" aria-label="ApplyPilot workflow preview">
+          <div className="preview-bar">
+            <span>Profile 92%</span>
+            <span>Ready for review</span>
+          </div>
+          <div className="preview-columns">
+            <article>
+              <p className="panel-kicker">Jobs</p>
+              <h3>Backend Engineer</h3>
+              <span className="tag direct">Direct API</span>
+            </article>
+            <article>
+              <p className="panel-kicker">Application</p>
+              <h3>Tailored package</h3>
+              <span className="tag assisted">Candidate review</span>
+            </article>
+          </div>
+          <div className="preview-steps">
+            <span>Resume tailored</span>
+            <span>Cover letter ready</span>
+            <span>Answers drafted</span>
+          </div>
         </div>
       </section>
 

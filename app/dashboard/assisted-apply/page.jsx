@@ -1,4 +1,5 @@
 import JobsBrowser from "@/components/JobsBrowser";
+import ExtensionSetup from "@/components/ExtensionSetup";
 
 export default function AssistedApplyPage() {
   return (
@@ -11,8 +12,9 @@ export default function AssistedApplyPage() {
         </div>
       </div>
       <div className="extension-panel" style={{ marginBottom: 16 }}>
-        <h3>Chrome extension included in this codebase</h3>
-        <p>Load the `extension` folder as an unpacked Chrome extension during development. It detects form labels and maps fields to profile/application data.</p>
+        <h3>Chrome extension connection</h3>
+        <p>Load the extension folder in Chrome, paste the extension token once, then use Prepare and open on any assisted job. The extension autofills the employer form from the latest prepared package.</p>
+        <ExtensionSetup />
       </div>
       <JobsBrowser mode="assisted" />
     </>

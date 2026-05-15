@@ -31,7 +31,7 @@ export default function AuthForm({ mode }) {
       setStatus(data.error || "Something went wrong.");
       return;
     }
-    router.push("/dashboard");
+    router.replace("/dashboard");
     router.refresh();
   }
 

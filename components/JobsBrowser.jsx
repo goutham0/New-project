@@ -11,9 +11,13 @@ export default function JobsBrowser({ mode }) {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
   const [sourceStatus, setSourceStatus] = useState(null);
+  const [reviewingDirect, setReviewingDirect] = useState(false);
+  const [directConsent, setDirectConsent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const isManual = mode === "manual";
   const isDirect = mode === "direct";
   const isAssisted = mode === "assisted";
+  const selectedJobs = jobs.filter((job) => selected.includes(job.id));
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -31,19 +35,73 @@ export default function JobsBrowser({ mode }) {
     setSelected((current) => current.includes(jobId) ? current.filter((id) => id !== jobId) : [...current, jobId]);
   }
 
-  async function prepare() {
+  async function prepareJobIds(jobIds) {
     setStatus("Preparing application packages...");
     const response = await fetch("/api/applications/prepare", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jobIds: selected })
+      body: JSON.stringify({ jobIds })
     });
     const data = await response.json();
     if (!response.ok) {
       setStatus(data.error || "Unable to prepare applications.");
+      return null;
+    }
+    return data.applications || [];
+  }
+
+  async function prepareAssisted(job) {
+    const applyWindow = window.open("about:blank", "_blank");
+    setSubmitting(true);
+    const applications = await prepareJobIds([job.id]);
+    setSubmitting(false);
+    if (!applications?.length) {
+      if (applyWindow) applyWindow.close();
+      setStatus("Unable to prepare this assisted application.");
       return;
     }
-    setStatus(`${data.applications.length} application package(s) prepared.`);
+    setStatus("Prepared. Opening employer form. Use the extension popup to autofill.");
+    if (applyWindow) {
+      applyWindow.opener = null;
+      applyWindow.location.href = normalizeApplyUrl(job.applyUrl);
+    } else {
+      window.location.href = normalizeApplyUrl(job.applyUrl);
+    }
+    router.refresh();
+  }
+
+  async function submitDirectBulk() {
+    if (!directConsent) {
+      setStatus("Confirm consent before direct submission.");
+      return;
+    }
+    setSubmitting(true);
+    const applications = await prepareJobIds(selected);
+    if (!applications?.length) {
+      setSubmitting(false);
+      setStatus("Unable to prepare selected direct applications.");
+      return;
+    }
+    setStatus("Submitting selected direct applications...");
+    const response = await fetch("/api/applications/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        applicationIds: applications.map((application) => application.id),
+        action: "submit",
+        consentConfirmed: true
+      })
+    });
+    const data = await response.json();
+    setSubmitting(false);
+    if (!response.ok) {
+      setStatus(data.error || "Unable to submit selected applications.");
+      return;
+    }
+    setStatus(`${data.applications.length} direct application(s) submitted.`);
+    setSelected([]);
+    setReviewingDirect(false);
+    setDirectConsent(false);
     router.push("/dashboard/applications");
     router.refresh();
   }
@@ -57,9 +115,14 @@ export default function JobsBrowser({ mode }) {
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search jobs, companies, skills"
         />
-        {!isManual && (
-          <button className="primary-button" type="button" disabled={!selected.length} onClick={prepare}>
-            {isDirect ? "Apply selected in bulk" : "Prepare assisted apply"}
+        {isDirect && (
+          <button
+            className="primary-button"
+            type="button"
+            disabled={!selected.length}
+            onClick={() => setReviewingDirect(true)}
+          >
+            Review selected
           </button>
         )}
       </div>
@@ -72,8 +135,33 @@ export default function JobsBrowser({ mode }) {
       )}
       {isDirect && (
         <p className="status-line">
-          Direct bulk apply shows only jobs with official submit APIs. Adzuna redirect jobs are available in Manual and Assisted Apply.
+          Select direct-supported jobs, review consent, then submit the selected applications.
         </p>
+      )}
+      {isDirect && reviewingDirect && (
+        <div className="review-panel">
+          <div>
+            <p className="eyebrow">Review selected</p>
+            <h3>{selectedJobs.length} direct application{selectedJobs.length === 1 ? "" : "s"}</h3>
+            <div className="selected-list">
+              {selectedJobs.map((job) => (
+                <span className="tag direct" key={job.id}>{job.title} at {job.company}</span>
+              ))}
+            </div>
+          </div>
+          <label className="consent-row">
+            <input type="checkbox" checked={directConsent} onChange={(event) => setDirectConsent(event.target.checked)} />
+            <span>I reviewed the selected jobs and authorize ApplyPilot to submit these applications through supported employer or ATS integrations.</span>
+          </label>
+          <div className="button-row compact">
+            <button className="primary-button" type="button" disabled={!directConsent || submitting} onClick={submitDirectBulk}>
+              {submitting ? "Submitting..." : "Submit selected"}
+            </button>
+            <button className="secondary-button" type="button" disabled={submitting} onClick={() => setReviewingDirect(false)}>
+              Change selection
+            </button>
+          </div>
+        </div>
       )}
       {status && <p className={`status-line ${status.includes("Unable") ? "error-line" : ""}`}>{status}</p>}
       <div className="job-grid">
@@ -85,7 +173,7 @@ export default function JobsBrowser({ mode }) {
         )}
         {!loading && jobs.map((job) => (
           <article className="job-card" key={job.id}>
-            {!isManual ? (
+            {isDirect ? (
               <input
                 type="checkbox"
                 checked={selected.includes(job.id)}
@@ -93,7 +181,7 @@ export default function JobsBrowser({ mode }) {
                 aria-label={`Select ${job.title}`}
               />
             ) : (
-              <span className="tag">Manual</span>
+              <span className={`tag ${isAssisted ? "assisted" : ""}`}>{isAssisted ? "Assist" : "Manual"}</span>
             )}
             <div>
               <h3>{job.title}</h3>
@@ -109,8 +197,21 @@ export default function JobsBrowser({ mode }) {
                 <span className="tag">{formatSalary(job)}</span>
               </div>
               <div className="job-actions">
-                <a className="text-button" href={job.applyUrl} target="_blank" rel="noreferrer">Open apply link</a>
-                {isAssisted && <a className="text-button" href="/dashboard/applications">Use extension package</a>}
+                {isManual && (
+                  <a className="primary-button slim" href={normalizeApplyUrl(job.applyUrl)} target="_blank" rel="noopener">
+                    Open apply page
+                  </a>
+                )}
+                {isAssisted && (
+                  <button className="primary-button slim" type="button" disabled={submitting} onClick={() => prepareAssisted(job)}>
+                    Prepare and open
+                  </button>
+                )}
+                {isDirect && (
+                  <button className="secondary-button slim" type="button" onClick={() => toggle(job.id)}>
+                    {selected.includes(job.id) ? "Selected" : "Select"}
+                  </button>
+                )}
               </div>
             </div>
             <strong className="score">{job.directApplySupported ? "API" : "Link"}</strong>
@@ -134,4 +235,11 @@ function formatSalary(job) {
   if (min) return `From $${min.toLocaleString()}`;
   if (max) return `Up to $${max.toLocaleString()}`;
   return "Salary not listed";
+}
+
+function normalizeApplyUrl(url) {
+  const value = String(url || "").trim();
+  if (!value) return "https://www.adzuna.com/";
+  if (/^https?:\/\//i.test(value)) return value;
+  return `https://${value}`;
 }

@@ -30,12 +30,18 @@ label {
 }
 
 input,
+textarea,
 button {
   min-height: 38px;
   border: 1px solid #dfe7e2;
   border-radius: 8px;
   padding: 8px 10px;
   font: inherit;
+}
+
+textarea {
+  min-height: 82px;
+  resize: vertical;
 }
 
 button {

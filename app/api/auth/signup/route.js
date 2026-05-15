@@ -16,7 +16,7 @@ export async function POST(request) {
     const user = await createUser({ email, passwordHash: hashPassword(password), name });
     await addAudit({ userId: user.id, eventType: "USER_SIGNED_UP", message: "Candidate account created." });
     const response = NextResponse.json({ user: publicUser(user) });
-    setSessionCookie(response, user);
+    setSessionCookie(response, user, request);
     return response;
   } catch (error) {
     return NextResponse.json({ error: error.message || "Signup failed." }, { status: 400 });

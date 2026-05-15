@@ -52,7 +52,18 @@ export async function POST(request) {
       applicationType: job.directApplySupported ? "DIRECT" : "ASSISTED",
       status: "NEEDS_REVIEW",
       matchScore: pkg.matchScore,
-      package: pkg
+      package: {
+        ...pkg,
+        job: {
+          id: job.id,
+          title: job.title,
+          company: job.company,
+          location: job.location,
+          source: job.source,
+          applyUrl: job.applyUrl,
+          directApplySupported: job.directApplySupported
+        }
+      }
     });
     applications.push(application);
   }

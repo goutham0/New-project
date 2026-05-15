@@ -88,13 +88,15 @@ chrome://extensions
 
 Enable Developer Mode, choose "Load unpacked", and select the `extension` folder.
 
+In ApplyPilot, open Assisted Apply and click **Connect extension**. Paste the generated token into the extension popup once. Then click **Prepare and open** on an assisted job, open the extension popup on the employer form, and click **Autofill page**.
+
 The extension reads the latest prepared assisted-apply package from:
 
 ```text
 /api/extension/prepared-application
 ```
 
-The candidate must be logged in to ApplyPilot in the same browser.
+The candidate must use the extension token generated from their logged-in ApplyPilot account.
 
 ## Main Routes
 

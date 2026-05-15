@@ -17,7 +17,8 @@ export default function ApplicationsClient() {
     load();
   }, []);
 
-  async function action(applicationId, actionName) {
+  async function action(application, actionName) {
+    const applicationId = application.id;
     if (actionName === "submit" && !consent) {
       setStatus("Confirm consent before direct submission.");
       return;
@@ -25,7 +26,7 @@ export default function ApplicationsClient() {
     const response = await fetch("/api/applications/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ applicationIds: [applicationId], action: actionName })
+      body: JSON.stringify({ applicationIds: [applicationId], action: actionName, consentConfirmed: consent })
     });
     const data = await response.json();
     if (!response.ok) {
@@ -33,6 +34,9 @@ export default function ApplicationsClient() {
       return;
     }
     setStatus("Application updated.");
+    if (actionName === "assist" && application.package?.job?.applyUrl) {
+      window.open(application.package.job.applyUrl, "_blank", "noopener");
+    }
     await load();
   }
 
@@ -88,20 +92,20 @@ export default function ApplicationsClient() {
             </article>
           </div>
           <div className="tracker-actions">
-            <button className="secondary-button" type="button" onClick={() => action(application.id, "approve")}>
+            <button className="secondary-button" type="button" onClick={() => action(application, "approve")}>
               Approve
             </button>
             {application.applicationType === "DIRECT" && (
-              <button className="primary-button" type="button" disabled={!consent} onClick={() => action(application.id, "submit")}>
+              <button className="primary-button" type="button" disabled={!consent} onClick={() => action(application, "submit")}>
                 Submit through API
               </button>
             )}
             {application.applicationType === "ASSISTED" && (
-              <button className="primary-button" type="button" onClick={() => action(application.id, "assist")}>
-                Open assisted apply
+              <button className="primary-button" type="button" onClick={() => action(application, "assist")}>
+                Open employer form
               </button>
             )}
-            <button className="secondary-button" type="button" onClick={() => action(application.id, "manual")}>
+            <button className="secondary-button" type="button" onClick={() => action(application, "manual")}>
               Mark submitted
             </button>
           </div>

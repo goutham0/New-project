@@ -6,7 +6,7 @@ export async function POST(request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { applicationIds = [], action = "submit" } = await request.json();
+  const { applicationIds = [], action = "submit", consentConfirmed = false } = await request.json();
   const existing = await listApplications(user.id);
   const updated = [];
 
@@ -32,6 +32,10 @@ export async function POST(request) {
         })
       );
       continue;
+    }
+
+    if (action === "submit" && application.applicationType === "DIRECT" && !consentConfirmed) {
+      return NextResponse.json({ error: "Candidate consent is required before direct submission." }, { status: 400 });
     }
 
     updated.push(
