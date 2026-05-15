@@ -10,6 +10,7 @@ ApplyPilot is a full-stack MVP for an AI job application platform. It includes a
 - Local JSON storage for development
 - PostgreSQL when `DATABASE_URL` is provided
 - Adzuna job search when `ADZUNA_APP_ID` and `ADZUNA_APP_KEY` are provided
+- OpenAI-backed tailored resume and ATS scoring when `OPENAI_API_KEY` is provided
 - Chrome extension scaffold for assisted apply
 
 ## Run Locally
@@ -64,8 +65,11 @@ STRIPE_WEBHOOK_SECRET
 STRIPE_PRO_PRICE_ID
 STRIPE_PREMIUM_PRICE_ID
 OPENAI_API_KEY
+OPENAI_MODEL
 EMAIL_PROVIDER_API_KEY
 ```
+
+The resume tailoring page accepts a resume upload plus pasted job description, generates a tailored resume PDF, and scores ATS readiness. Without `OPENAI_API_KEY`, the page still works with a local fallback so the UI can be tested.
 
 Needed for real direct apply:
 
@@ -124,4 +128,5 @@ The candidate must use the extension token generated from their logged-in ApplyP
 - `POST /api/applications/prepare`
 - `POST /api/applications/submit`
 - `POST /api/ai/tailor`
+- `POST /api/ai/ats-score`
 - `GET /api/extension/prepared-application`

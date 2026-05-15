@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { saveResume, addAudit } from "@/lib/store";
+import { extractResumeText } from "@/lib/resumeText";
 
 export async function POST(request) {
   const user = await currentUser();
@@ -12,7 +13,7 @@ export async function POST(request) {
     return NextResponse.json({ error: "Resume file is required." }, { status: 400 });
   }
 
-  const text = file.type === "text/plain" ? await file.text() : `Uploaded ${file.name}. Parsing service pending for ${file.type || "file"}.`;
+  const text = await extractResumeText(file);
   const resume = await saveResume({
     userId: user.id,
     fileName: file.name,

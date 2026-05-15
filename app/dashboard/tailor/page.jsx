@@ -6,8 +6,8 @@ export default function TailorPage() {
       <div className="dashboard-header">
         <div className="dashboard-title">
           <p className="eyebrow">Tailored resume generation</p>
-          <h1>Resume and job description tailoring</h1>
-          <p>Upload or paste resume content and a job description to generate truthful tailored materials.</p>
+          <h1>Resume PDF and ATS score</h1>
+          <p>Upload a resume, paste a job description, generate a tailored resume PDF, and check ATS readiness.</p>
         </div>
       </div>
       <TailorClient />

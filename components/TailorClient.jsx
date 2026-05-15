@@ -3,73 +3,214 @@
 import { useState } from "react";
 
 export default function TailorClient() {
+  const [resumeFile, setResumeFile] = useState(null);
   const [resumeText, setResumeText] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [result, setResult] = useState(null);
+  const [atsResult, setAtsResult] = useState(null);
+  const [pdfUrl, setPdfUrl] = useState("");
+  const [pdfName, setPdfName] = useState("tailored-resume.pdf");
   const [status, setStatus] = useState("");
+  const [atsStatus, setAtsStatus] = useState("");
   const [busy, setBusy] = useState(false);
+  const [atsBusy, setAtsBusy] = useState(false);
 
-  async function submit(event) {
+  async function generateTailoredResume(event) {
     event.preventDefault();
     setBusy(true);
-    setStatus("Generating tailored package...");
-    const response = await fetch("/api/ai/tailor", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ resumeText, jobDescription })
-    });
+    setStatus("Generating tailored resume PDF...");
+    setResult(null);
+    revokePdf();
+
+    const formData = new FormData();
+    if (resumeFile) formData.append("resume", resumeFile);
+    formData.append("resumeText", resumeText);
+    formData.append("jobDescription", jobDescription);
+
+    const response = await fetch("/api/ai/tailor", { method: "POST", body: formData });
     const data = await response.json();
     setBusy(false);
     if (!response.ok) {
-      setStatus(data.error || "Unable to generate.");
+      setStatus(data.error || "Unable to generate tailored resume.");
       return;
     }
+
     setResult(data.result);
-    setStatus("Tailored package generated.");
+    setPdfName(data.fileName || "tailored-resume.pdf");
+    setPdfUrl(base64PdfToUrl(data.pdfBase64));
+    setStatus(data.result?.aiUsed ? "GPT-tailored resume PDF generated." : "Tailored resume PDF generated with local fallback. Add OPENAI_API_KEY for GPT output.");
+  }
+
+  async function scoreAts(event) {
+    event.preventDefault();
+    setAtsBusy(true);
+    setAtsStatus("Scoring resume for ATS...");
+    setAtsResult(null);
+
+    const formData = new FormData();
+    if (resumeFile) formData.append("resume", resumeFile);
+    formData.append("resumeText", resumeText);
+    formData.append("jobDescription", jobDescription);
+
+    const response = await fetch("/api/ai/ats-score", { method: "POST", body: formData });
+    const data = await response.json();
+    setAtsBusy(false);
+    if (!response.ok) {
+      setAtsStatus(data.error || "Unable to score resume.");
+      return;
+    }
+
+    setAtsResult(data.result);
+    setAtsStatus(data.result?.aiUsed ? "GPT ATS score generated." : "ATS score generated with local fallback. Add OPENAI_API_KEY for GPT scoring.");
+  }
+
+  function revokePdf() {
+    if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    setPdfUrl("");
   }
 
   return (
-    <div className="dashboard-grid two">
-      <form className="form-grid dashboard-card" onSubmit={submit}>
+    <div className="dashboard-grid">
+      <form className="form-grid dashboard-card" onSubmit={generateTailoredResume}>
+        <div>
+          <h3>Generate tailored resume PDF</h3>
+          <p>Upload a resume, paste the JD, and download a clean ATS-friendly PDF.</p>
+        </div>
         <label>
-          <span>Resume text</span>
-          <textarea value={resumeText} onChange={(event) => setResumeText(event.target.value)} required />
+          <span>Resume upload</span>
+          <input
+            type="file"
+            accept=".txt,.pdf,.docx,text/plain,application/pdf"
+            onChange={(event) => setResumeFile(event.target.files?.[0] || null)}
+          />
+        </label>
+        <label>
+          <span>Resume text fallback</span>
+          <textarea
+            value={resumeText}
+            onChange={(event) => setResumeText(event.target.value)}
+            placeholder="Paste resume text if the uploaded file is not readable."
+          />
         </label>
         <label>
           <span>Job description</span>
-          <textarea value={jobDescription} onChange={(event) => setJobDescription(event.target.value)} required />
+          <textarea
+            value={jobDescription}
+            onChange={(event) => setJobDescription(event.target.value)}
+            placeholder="Paste the full job description here."
+            required
+          />
         </label>
-        <button className="primary-button" type="submit" disabled={busy}>
-          {busy ? "Generating" : "Generate tailored resume"}
-        </button>
+        <div className="button-row compact">
+          <button className="primary-button" type="submit" disabled={busy || (!resumeFile && !resumeText.trim())}>
+            {busy ? "Generating..." : "Generate PDF"}
+          </button>
+          <button className="secondary-button" type="button" disabled={atsBusy || (!resumeFile && !resumeText.trim())} onClick={scoreAts}>
+            {atsBusy ? "Scoring..." : "Get ATS score"}
+          </button>
+        </div>
         {status && <p className={`status-line ${status.includes("Unable") ? "error-line" : ""}`}>{status}</p>}
+        {atsStatus && <p className={`status-line ${atsStatus.includes("Unable") ? "error-line" : ""}`}>{atsStatus}</p>}
       </form>
 
-      <article className="dashboard-card">
-        <h3>Generated package</h3>
-        {!result && <p>Paste a resume and job description to generate an application-ready package.</p>}
-        {result && (
-          <div className="dashboard-grid">
-            <section>
-              <h4>{result.tailoredResume.headline}</h4>
-              <p>{result.tailoredResume.summary}</p>
-              <ul>
-                {result.tailoredResume.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
-              </ul>
-            </section>
-            <section>
-              <h4>Cover letter</h4>
-              <p style={{ whiteSpace: "pre-wrap" }}>{result.coverLetter}</p>
-            </section>
-            <section>
-              <h4>Screening answers</h4>
-              {result.answers.map((answer) => (
-                <p key={answer.question}><strong>{answer.question}</strong><br />{answer.answer}</p>
-              ))}
-            </section>
-          </div>
-        )}
-      </article>
+      <div className="dashboard-grid two">
+        <article className="dashboard-card">
+          <h3>Tailored resume output</h3>
+          {!result && <p>Generate a resume PDF to preview the rewritten sections and download the file.</p>}
+          {result && (
+            <div className="dashboard-grid">
+              <section>
+                <p className="eyebrow">{result.aiUsed ? "GPT generated" : "Local fallback"}</p>
+                <h4>{result.candidateName}</h4>
+                <p><strong>{result.targetRole}</strong></p>
+                <p>{result.professionalSummary}</p>
+              </section>
+              <section>
+                <h4>Core skills</h4>
+                <div className="tag-row">
+                  {(result.coreSkills || []).map((skill) => <span className="tag" key={skill}>{skill}</span>)}
+                </div>
+              </section>
+              <section>
+                <h4>Experience bullets</h4>
+                <ul>
+                  {(result.experienceBullets || []).slice(0, 6).map((bullet) => <li key={bullet}>{bullet}</li>)}
+                </ul>
+              </section>
+              {pdfUrl && (
+                <a className="primary-button" href={pdfUrl} download={pdfName}>
+                  Download tailored PDF
+                </a>
+              )}
+              {result.warning && <p className="status-line error-line">{result.warning}</p>}
+            </div>
+          )}
+        </article>
+
+        <article className="dashboard-card">
+          <h3>ATS score</h3>
+          {!atsResult && <p>Upload or paste a resume to get an ATS compatibility score. Paste a JD for keyword-match scoring.</p>}
+          {atsResult && (
+            <div className="dashboard-grid">
+              <div className="score-ring">
+                <strong>{atsResult.overallScore}</strong>
+                <span>Overall ATS score</span>
+              </div>
+              <div className="metric-grid">
+                <Metric label="ATS parsing" value={atsResult.atsCompatibilityScore} />
+                <Metric label="Keywords" value={atsResult.keywordScore} />
+                <Metric label="Formatting" value={atsResult.formattingScore} />
+                <Metric label="Impact" value={atsResult.impactScore} />
+              </div>
+              <p>{atsResult.summary}</p>
+              <KeywordBlock title="Matched keywords" items={atsResult.matchedKeywords} tone="direct" />
+              <KeywordBlock title="Missing keywords" items={atsResult.missingKeywords} tone="assisted" />
+              <ListBlock title="Recommendations" items={atsResult.recommendations} />
+              {atsResult.warning && <p className="status-line error-line">{atsResult.warning}</p>}
+            </div>
+          )}
+        </article>
+      </div>
     </div>
   );
+}
+
+function Metric({ label, value }) {
+  return (
+    <div className="metric-card">
+      <strong>{value}</strong>
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function KeywordBlock({ title, items = [], tone }) {
+  return (
+    <section>
+      <h4>{title}</h4>
+      <div className="tag-row">
+        {items.length ? items.map((item) => <span className={`tag ${tone || ""}`} key={item}>{item}</span>) : <span className="tag">None listed</span>}
+      </div>
+    </section>
+  );
+}
+
+function ListBlock({ title, items = [] }) {
+  return (
+    <section>
+      <h4>{title}</h4>
+      <ul>
+        {items.map((item) => <li key={item}>{item}</li>)}
+      </ul>
+    </section>
+  );
+}
+
+function base64PdfToUrl(base64) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
 }
