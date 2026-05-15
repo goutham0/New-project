@@ -733,6 +733,111 @@ p {
   box-shadow: 0 12px 28px rgba(31, 56, 50, 0.06);
 }
 
+.direct-review-panel {
+  gap: 18px;
+}
+
+.review-panel-header,
+.review-card-title,
+.review-section-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.review-panel-header p,
+.review-card-title p {
+  margin-bottom: 0;
+}
+
+.bulk-review-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.application-review-card {
+  display: grid;
+  gap: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  background: var(--surface-soft);
+}
+
+.review-section {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.review-section h4 {
+  margin-bottom: 0;
+}
+
+.compact-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.submission-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.submission-grid div {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px;
+  background: #ffffff;
+}
+
+.submission-grid dt {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.submission-grid dd {
+  margin: 4px 0 0;
+  color: var(--ink);
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.generated-text {
+  white-space: pre-wrap;
+}
+
+.answer-list {
+  display: grid;
+  gap: 10px;
+}
+
+.answer-list div {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  background: #ffffff;
+}
+
+.answer-list p {
+  margin-bottom: 0;
+}
+
+.generated-grid .secondary-button.slim,
+.application-review-card .secondary-button.slim {
+  margin-top: 4px;
+}
+
 .selected-list {
   display: flex;
   flex-wrap: wrap;
@@ -776,6 +881,27 @@ p {
 .extension-steps {
   display: grid;
   gap: 12px;
+}
+
+.extension-install-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.extension-checklist {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius);
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.extension-checklist span {
+  color: #ffffff;
+  font-weight: 750;
+  line-height: 1.45;
 }
 
 .extension-steps .secondary-button {
@@ -846,6 +972,7 @@ p {
   .mode-grid,
   .stats-grid,
   .metric-grid,
+  .submission-grid,
   .dashboard-grid.two,
   .generated-grid {
     grid-template-columns: 1fr;
@@ -931,6 +1058,13 @@ p {
     grid-template-columns: auto 1fr;
   }
 
+  .review-panel-header,
+  .review-card-title,
+  .review-section-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .score {
     grid-column: 2;
   }
@@ -942,7 +1076,8 @@ p {
 
   .primary-button.slim,
   .secondary-button.slim,
-  .extension-steps .secondary-button {
+  .extension-steps .secondary-button,
+  .extension-install-grid .primary-button {
     width: 100%;
   }
 

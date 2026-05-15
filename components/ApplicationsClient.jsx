@@ -75,6 +75,15 @@ export default function ApplicationsClient() {
                   <li key={bullet}>{bullet}</li>
                 ))}
               </ul>
+              {application.package?.tailoredResumePdfBase64 && (
+                <a
+                  className="secondary-button slim"
+                  href={`data:application/pdf;base64,${application.package.tailoredResumePdfBase64}`}
+                  download={application.package.tailoredResumePdfFileName || "tailored-resume.pdf"}
+                >
+                  Download PDF
+                </a>
+              )}
             </article>
             <article>
               <h4>Cover letter</h4>
@@ -92,22 +101,28 @@ export default function ApplicationsClient() {
             </article>
           </div>
           <div className="tracker-actions">
-            <button className="secondary-button" type="button" onClick={() => action(application, "approve")}>
-              Approve
-            </button>
-            {application.applicationType === "DIRECT" && (
-              <button className="primary-button" type="button" disabled={!consent} onClick={() => action(application, "submit")}>
-                Submit through API
-              </button>
+            {application.status === "SUBMITTED" ? (
+              <span className="tag direct">Submitted ID: {application.externalApplicationId || "Recorded"}</span>
+            ) : (
+              <>
+                <button className="secondary-button" type="button" onClick={() => action(application, "approve")}>
+                  Approve
+                </button>
+                {application.applicationType === "DIRECT" && (
+                  <button className="primary-button" type="button" disabled={!consent} onClick={() => action(application, "submit")}>
+                    Submit through API
+                  </button>
+                )}
+                {application.applicationType === "ASSISTED" && (
+                  <button className="primary-button" type="button" onClick={() => action(application, "assist")}>
+                    Open employer form
+                  </button>
+                )}
+                <button className="secondary-button" type="button" onClick={() => action(application, "manual")}>
+                  Mark submitted
+                </button>
+              </>
             )}
-            {application.applicationType === "ASSISTED" && (
-              <button className="primary-button" type="button" onClick={() => action(application, "assist")}>
-                Open employer form
-              </button>
-            )}
-            <button className="secondary-button" type="button" onClick={() => action(application, "manual")}>
-              Mark submitted
-            </button>
           </div>
         </article>
       ))}

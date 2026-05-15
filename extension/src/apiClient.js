@@ -1,16 +1,35 @@
 window.ApplyPilotApi = {
-  async baseUrl() {
-    const stored = await chrome.storage.sync.get(["applyPilotBaseUrl"]);
-    return stored.applyPilotBaseUrl || "http://localhost:3000";
+  handoffFromLocation() {
+    const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const token = params.get("applypilot_token");
+    const baseUrl = params.get("applypilot_base");
+    return token && baseUrl ? { token, baseUrl } : null;
+  },
+
+  async handoff() {
+    const fromLocation = this.handoffFromLocation();
+    if (fromLocation) {
+      await chrome.storage.sync.set({
+        applyPilotHandoffToken: fromLocation.token,
+        applyPilotBaseUrl: fromLocation.baseUrl
+      });
+      return fromLocation;
+    }
+    const stored = await chrome.storage.sync.get(["applyPilotBaseUrl", "applyPilotHandoffToken"]);
+    return stored.applyPilotBaseUrl && stored.applyPilotHandoffToken
+      ? { baseUrl: stored.applyPilotBaseUrl, token: stored.applyPilotHandoffToken }
+      : null;
   },
 
   async getPreparedApplication() {
-    const baseUrl = await this.baseUrl();
-    const response = await fetch(`${baseUrl}/api/extension/prepared-application`, {
-      credentials: "include"
-    });
+    const handoff = await this.handoff();
+    if (!handoff) {
+      throw new Error("Click Prepare and open from ApplyPilot before autofilling this page.");
+    }
+    const url = `${handoff.baseUrl}/api/extension/prepared-application?token=${encodeURIComponent(handoff.token)}`;
+    const response = await fetch(url);
     if (!response.ok) {
-      throw new Error("Login to ApplyPilot in the same browser before assisted apply.");
+      throw new Error("Unable to load prepared application. Go back to ApplyPilot and click Prepare and open again.");
     }
     return response.json();
   }

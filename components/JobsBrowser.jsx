@@ -12,12 +12,13 @@ export default function JobsBrowser({ mode }) {
   const [loading, setLoading] = useState(true);
   const [sourceStatus, setSourceStatus] = useState(null);
   const [reviewingDirect, setReviewingDirect] = useState(false);
+  const [directApplications, setDirectApplications] = useState([]);
   const [directConsent, setDirectConsent] = useState(false);
+  const [preparingDirect, setPreparingDirect] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const isManual = mode === "manual";
   const isDirect = mode === "direct";
   const isAssisted = mode === "assisted";
-  const selectedJobs = jobs.filter((job) => selected.includes(job.id));
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -33,6 +34,9 @@ export default function JobsBrowser({ mode }) {
 
   function toggle(jobId) {
     setSelected((current) => current.includes(jobId) ? current.filter((id) => id !== jobId) : [...current, jobId]);
+    setDirectApplications([]);
+    setReviewingDirect(false);
+    setDirectConsent(false);
   }
 
   async function prepareJobIds(jobIds) {
@@ -61,13 +65,34 @@ export default function JobsBrowser({ mode }) {
       return;
     }
     setStatus("Prepared. Opening employer form. Use the extension popup to autofill.");
+    const targetUrl = withApplyPilotHandoff(job.applyUrl, applications[0].handoffToken);
     if (applyWindow) {
       applyWindow.opener = null;
-      applyWindow.location.href = normalizeApplyUrl(job.applyUrl);
+      applyWindow.location.href = targetUrl;
     } else {
-      window.location.href = normalizeApplyUrl(job.applyUrl);
+      window.location.href = targetUrl;
     }
     router.refresh();
+  }
+
+  async function prepareDirectReview() {
+    if (!selected.length) {
+      setStatus("Select at least one direct-supported job first.");
+      return;
+    }
+    setPreparingDirect(true);
+    setDirectConsent(false);
+    setDirectApplications([]);
+    setReviewingDirect(false);
+    const applications = await prepareJobIds(selected);
+    setPreparingDirect(false);
+    if (!applications?.length) {
+      setStatus("Unable to prepare selected direct applications.");
+      return;
+    }
+    setDirectApplications(applications);
+    setReviewingDirect(true);
+    setStatus("Review every generated package, download the tailored PDFs if needed, then confirm consent.");
   }
 
   async function submitDirectBulk() {
@@ -75,19 +100,17 @@ export default function JobsBrowser({ mode }) {
       setStatus("Confirm consent before direct submission.");
       return;
     }
-    setSubmitting(true);
-    const applications = await prepareJobIds(selected);
-    if (!applications?.length) {
-      setSubmitting(false);
-      setStatus("Unable to prepare selected direct applications.");
+    if (!directApplications.length) {
+      setStatus("Prepare selected applications before submitting.");
       return;
     }
+    setSubmitting(true);
     setStatus("Submitting selected direct applications...");
     const response = await fetch("/api/applications/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        applicationIds: applications.map((application) => application.id),
+        applicationIds: directApplications.map((application) => application.id),
         action: "submit",
         consentConfirmed: true
       })
@@ -100,6 +123,7 @@ export default function JobsBrowser({ mode }) {
     }
     setStatus(`${data.applications.length} direct application(s) submitted.`);
     setSelected([]);
+    setDirectApplications([]);
     setReviewingDirect(false);
     setDirectConsent(false);
     router.push("/dashboard/applications");
@@ -119,10 +143,10 @@ export default function JobsBrowser({ mode }) {
           <button
             className="primary-button"
             type="button"
-            disabled={!selected.length}
-            onClick={() => setReviewingDirect(true)}
+            disabled={!selected.length || preparingDirect || submitting}
+            onClick={prepareDirectReview}
           >
-            Review selected
+            {preparingDirect ? "Preparing..." : `Apply selected${selected.length ? ` (${selected.length})` : ""}`}
           </button>
         )}
       </div>
@@ -135,19 +159,23 @@ export default function JobsBrowser({ mode }) {
       )}
       {isDirect && (
         <p className="status-line">
-          Select direct-supported jobs, review consent, then submit the selected applications.
+          Select direct-supported jobs, click Apply selected, review each tailored package, then submit with consent.
         </p>
       )}
       {isDirect && reviewingDirect && (
-        <div className="review-panel">
-          <div>
-            <p className="eyebrow">Review selected</p>
-            <h3>{selectedJobs.length} direct application{selectedJobs.length === 1 ? "" : "s"}</h3>
-            <div className="selected-list">
-              {selectedJobs.map((job) => (
-                <span className="tag direct" key={job.id}>{job.title} at {job.company}</span>
-              ))}
+        <div className="review-panel direct-review-panel">
+          <div className="review-panel-header">
+            <div>
+              <p className="eyebrow">Review generated packages</p>
+              <h3>{directApplications.length} direct application{directApplications.length === 1 ? "" : "s"} ready</h3>
+              <p>Check the resume PDF, candidate information, cover letter, and screening answers before submission.</p>
             </div>
+            <span className="tag direct">Needs candidate approval</span>
+          </div>
+          <div className="bulk-review-grid">
+            {directApplications.map((application) => (
+              <DirectApplicationReview key={application.id} application={application} />
+            ))}
           </div>
           <label className="consent-row">
             <input type="checkbox" checked={directConsent} onChange={(event) => setDirectConsent(event.target.checked)} />
@@ -157,13 +185,22 @@ export default function JobsBrowser({ mode }) {
             <button className="primary-button" type="button" disabled={!directConsent || submitting} onClick={submitDirectBulk}>
               {submitting ? "Submitting..." : "Submit selected"}
             </button>
-            <button className="secondary-button" type="button" disabled={submitting} onClick={() => setReviewingDirect(false)}>
+            <button
+              className="secondary-button"
+              type="button"
+              disabled={submitting}
+              onClick={() => {
+                setReviewingDirect(false);
+                setDirectApplications([]);
+                setDirectConsent(false);
+              }}
+            >
               Change selection
             </button>
           </div>
         </div>
       )}
-      {status && <p className={`status-line ${status.includes("Unable") ? "error-line" : ""}`}>{status}</p>}
+      {status && <p className={`status-line ${isErrorStatus(status) ? "error-line" : ""}`}>{status}</p>}
       <div className="job-grid">
         {loading && (
           <div className="empty-state">
@@ -228,6 +265,92 @@ export default function JobsBrowser({ mode }) {
   );
 }
 
+function DirectApplicationReview({ application }) {
+  const pkg = application.package || {};
+  const job = pkg.job || {};
+  const resume = pkg.tailoredResume || {};
+  const submission = pkg.candidateSubmission || {};
+  const pdfHref = pkg.tailoredResumePdfBase64 ? `data:application/pdf;base64,${pkg.tailoredResumePdfBase64}` : "";
+  const jobMeta = [job.company, job.location].filter(Boolean).join(" - ");
+
+  return (
+    <article className="application-review-card">
+      <div className="review-card-title">
+        <div>
+          <span className="tag direct">{job.source || "Supported API"}</span>
+          <h4>{job.title || application.jobId}</h4>
+          {jobMeta && <p>{jobMeta}</p>}
+        </div>
+        <strong className="score">{application.matchScore}%</strong>
+      </div>
+
+      <section className="review-section">
+        <div className="review-section-header">
+          <h4>Tailored resume</h4>
+          {pkg.aiUsed && <span className="tag direct">GPT generated</span>}
+        </div>
+        <p>{resume.summary}</p>
+        <ul className="compact-list">
+          {(resume.bullets || []).slice(0, 4).map((bullet) => (
+            <li key={bullet}>{bullet}</li>
+          ))}
+        </ul>
+        {pdfHref && (
+          <a className="secondary-button slim" href={pdfHref} download={pkg.tailoredResumePdfFileName || "tailored-resume.pdf"}>
+            Download tailored PDF
+          </a>
+        )}
+      </section>
+
+      <section className="review-section">
+        <h4>Information to submit</h4>
+        <dl className="submission-grid">
+          {submissionRows(submission).map((row) => (
+            <div key={row.label}>
+              <dt>{row.label}</dt>
+              <dd>{row.value || "Not provided"}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <section className="review-section">
+        <h4>Cover letter</h4>
+        <p className="generated-text">{pkg.coverLetter}</p>
+      </section>
+
+      <section className="review-section">
+        <h4>Screening answers</h4>
+        <div className="answer-list">
+          {(pkg.answers || []).map((answer) => (
+            <div key={answer.question}>
+              <strong>{answer.question}</strong>
+              <p>{answer.answer}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </article>
+  );
+}
+
+function submissionRows(submission) {
+  return [
+    ["Name", submission.name],
+    ["Email", submission.email],
+    ["Phone", submission.phone],
+    ["Location", submission.location],
+    ["Work authorization", submission.workAuthorization],
+    ["Sponsorship", submission.sponsorshipRequired],
+    ["Current title", submission.currentTitle],
+    ["Years experience", submission.yearsExperience]
+  ].map(([label, value]) => ({ label, value }));
+}
+
+function isErrorStatus(status) {
+  return /unable|required|complete|confirm/i.test(status);
+}
+
 function formatSalary(job) {
   const min = Number(job.salaryMin || 0);
   const max = Number(job.salaryMax || 0);
@@ -242,4 +365,14 @@ function normalizeApplyUrl(url) {
   if (!value) return "https://www.adzuna.com/";
   if (/^https?:\/\//i.test(value)) return value;
   return `https://${value}`;
+}
+
+function withApplyPilotHandoff(url, token) {
+  const target = normalizeApplyUrl(url);
+  if (!token) return target;
+  const [baseAndQuery, existingHash = ""] = target.split("#");
+  const params = new URLSearchParams(existingHash);
+  params.set("applypilot_base", window.location.origin);
+  params.set("applypilot_token", token);
+  return `${baseAndQuery}#${params.toString()}`;
 }

@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
+import { createAssistedApplyToken } from "@/lib/auth";
 import { getProfile, getLatestResume, createApplication, addAudit } from "@/lib/store";
 import { getJobById } from "@/lib/jobs";
 import { generateApplicationPackage } from "@/lib/ai";
+import { generateTailoredResume } from "@/lib/openaiResume";
+import { createResumePdf } from "@/lib/pdf";
 
 const requiredFields = [
   "firstName",
@@ -45,8 +48,8 @@ export async function POST(request) {
     const job = await getJobById(jobId);
     if (!job) continue;
     if (job.applyType === "manual") continue;
-    const pkg = generateApplicationPackage({ profile, resumeText: resume.content, job });
-    const application = await createApplication({
+    const pkg = await buildPreparedPackage({ profile, resumeText: resume.content, job });
+    let application = await createApplication({
       userId: user.id,
       jobId: job.id,
       applicationType: job.directApplySupported ? "DIRECT" : "ASSISTED",
@@ -65,6 +68,12 @@ export async function POST(request) {
         }
       }
     });
+    if (application.applicationType === "ASSISTED") {
+      application = {
+        ...application,
+        handoffToken: createAssistedApplyToken(user, application)
+      };
+    }
     applications.push(application);
   }
 
@@ -74,4 +83,104 @@ export async function POST(request) {
     message: `${applications.length} application package(s) prepared.`
   });
   return NextResponse.json({ applications });
+}
+
+async function buildPreparedPackage({ profile, resumeText, job }) {
+  const fallback = generateApplicationPackage({ profile, resumeText, job });
+  const tailored = await generateTailoredResume({
+    resumeText,
+    jobDescription: buildJobDescription(job),
+    profile
+  });
+  const pdf = createResumePdf(tailored);
+
+  return {
+    matchScore: fallback.matchScore,
+    tailoredResume: {
+      headline: `${tailored.candidateName || "Candidate"} - tailored for ${job.title}`,
+      summary: tailored.professionalSummary || fallback.tailoredResume.summary,
+      bullets: (tailored.experienceBullets?.length ? tailored.experienceBullets : fallback.tailoredResume.bullets).slice(0, 8),
+      skills: tailored.coreSkills || [],
+      atsKeywords: tailored.atsKeywords || []
+    },
+    tailoredResumePdfBase64: pdf.toString("base64"),
+    tailoredResumePdfFileName: `${safeFilePart(job.company)}-${safeFilePart(job.title)}-tailored-resume.pdf`,
+    coverLetter: tailored.coverLetter || fallback.coverLetter,
+    answers: normalizeAnswers({
+      jobQuestions: job.questions || [],
+      generatedAnswers: tailored.screeningAnswers || [],
+      fallbackAnswers: fallback.answers || []
+    }),
+    candidateSubmission: buildCandidateSubmission(profile),
+    tailoringNotes: tailored.notes || [],
+    aiUsed: Boolean(tailored.aiUsed)
+  };
+}
+
+function buildJobDescription(job) {
+  return [
+    `${job.title} at ${job.company}`,
+    `Location: ${job.location}`,
+    `Work mode: ${job.remoteType}`,
+    `Employment type: ${job.employmentType}`,
+    `Experience level: ${job.experienceLevel || "Not listed"}`,
+    `Skills: ${(job.skills || []).join(", ")}`,
+    "",
+    job.description || "",
+    "",
+    "Application questions:",
+    ...(job.questions || []).map((question) => `- ${question}`)
+  ].join("\n");
+}
+
+function normalizeAnswers({ jobQuestions, generatedAnswers, fallbackAnswers }) {
+  if (!jobQuestions.length) {
+    return generatedAnswers.map((item) => ({
+      question: item.question,
+      answer: item.answer,
+      confidence: 0.86
+    }));
+  }
+
+  return jobQuestions.map((question, index) => {
+    const normalizedQuestion = question.toLowerCase();
+    const generated =
+      generatedAnswers.find((item) => String(item.question || "").toLowerCase() === normalizedQuestion) ||
+      generatedAnswers.find((item) => {
+        const generatedQuestion = String(item.question || "").toLowerCase();
+        return generatedQuestion && (normalizedQuestion.includes(generatedQuestion) || generatedQuestion.includes(normalizedQuestion));
+      });
+    const fallback = fallbackAnswers.find((item) => item.question === question) || fallbackAnswers[index];
+    const indexedGenerated = generatedAnswers[index];
+
+    return {
+      question,
+      answer: generated?.answer || fallback?.answer || indexedGenerated?.answer || "Candidate should review and provide an answer.",
+      confidence: generated?.answer ? 0.88 : fallback?.confidence || 0.72
+    };
+  });
+}
+
+function buildCandidateSubmission(profile) {
+  return {
+    name: [profile.firstName, profile.lastName].filter(Boolean).join(" "),
+    email: profile.email || "",
+    phone: profile.phone || "",
+    location: [profile.city, profile.state, profile.country].filter(Boolean).join(", "),
+    workAuthorization: profile.workAuthorization || "",
+    sponsorshipRequired: profile.sponsorshipRequired || "",
+    currentTitle: profile.currentTitle || "",
+    yearsExperience: profile.yearsExperience || "",
+    linkedinUrl: profile.linkedinUrl || "",
+    githubUrl: profile.githubUrl || "",
+    portfolioUrl: profile.portfolioUrl || ""
+  };
+}
+
+function safeFilePart(value) {
+  return String(value || "application")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 64) || "application";
 }

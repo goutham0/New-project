@@ -1,44 +1,18 @@
 "use client";
 
-import { useState } from "react";
-
 export default function ExtensionSetup() {
-  const [token, setToken] = useState("");
-  const [baseUrl, setBaseUrl] = useState("");
-  const [status, setStatus] = useState("");
-
-  async function createToken() {
-    setStatus("Creating extension connection...");
-    const response = await fetch("/api/extension/token");
-    const data = await response.json();
-    if (!response.ok) {
-      setStatus(data.error || "Login before connecting the extension.");
-      return;
-    }
-    setToken(data.token);
-    setBaseUrl(data.baseUrl);
-    await navigator.clipboard?.writeText(data.token).catch(() => {});
-    setStatus("Extension token created and copied. Paste it into the extension popup once.");
-  }
-
   return (
     <div className="extension-steps">
-      <button className="secondary-button" type="button" onClick={createToken}>
-        Connect extension
-      </button>
-      {status && <p>{status}</p>}
-      {token && (
-        <div className="token-box">
-          <label>
-            Base URL
-            <input value={baseUrl} readOnly />
-          </label>
-          <label>
-            Extension token
-            <textarea value={token} readOnly rows={3} />
-          </label>
-        </div>
-      )}
+      <a className="primary-button" href="/applypilot-extension.zip" download>
+        Download Chrome extension
+      </a>
+      <div className="extension-checklist">
+        <span>1. Download and unzip the extension file.</span>
+        <span>2. Open chrome://extensions and turn on Developer mode.</span>
+        <span>3. Click Load unpacked and select the unzipped extension folder.</span>
+        <span>4. Click Prepare and open on any assisted job.</span>
+        <span>5. The extension will detect the prepared job and autofill. You can also click the extension icon and press Autofill page.</span>
+      </div>
     </div>
   );
 }
