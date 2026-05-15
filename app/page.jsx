@@ -44,8 +44,8 @@ export default function HomePage() {
       <section className="hero">
         <img src="/platform-preview.png" alt="ApplyPilot candidate dashboard preview" />
         <div className="hero-content">
-          <p className="eyebrow">AI-powered job application assistant</p>
-          <h1>Apply faster with candidate-approved AI workflows</h1>
+          <p className="eyebrow">AI job application assistant</p>
+          <h1>Apply faster with AI-assisted job applications</h1>
           <p>
             Build one reusable profile, upload a resume, choose a plan, generate tailored resumes and cover letters,
             and apply through supported employer integrations.
