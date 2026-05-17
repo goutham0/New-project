@@ -32,7 +32,23 @@ export async function POST(request) {
   }
 
   const profile = await getProfile(user.id);
-  const result = await generateTailoredResume({ resumeText, jobDescription, profile });
+  let result;
+  try {
+    result = await generateTailoredResume({ resumeText, jobDescription, profile, requireAi: true });
+  } catch (error) {
+    await addAudit({
+      userId: user.id,
+      eventType: "TAILORED_RESUME_PDF_FAILED",
+      message: "Tailored resume PDF generation failed.",
+      metadata: { reason: error.message }
+    });
+    return NextResponse.json({
+      error: "GPT resume generation is not active yet.",
+      detail: error.message,
+      fix: "Add OPENAI_API_KEY and OPENAI_MODEL in your environment variables, redeploy/restart, then generate again."
+    }, { status: 503 });
+  }
+
   const pdf = createResumePdf(result);
   await addAudit({
     userId: user.id,

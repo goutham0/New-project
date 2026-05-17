@@ -27,18 +27,26 @@ export default function TailorClient() {
     formData.append("resumeText", resumeText);
     formData.append("jobDescription", jobDescription);
 
-    const response = await fetch("/api/ai/tailor", { method: "POST", body: formData });
-    const data = await response.json();
+    let data;
+    let response;
+    try {
+      response = await fetch("/api/ai/tailor", { method: "POST", body: formData });
+      data = await response.json();
+    } catch (error) {
+      setBusy(false);
+      setStatus(`Unable to generate tailored resume. ${error.message}`);
+      return;
+    }
     setBusy(false);
     if (!response.ok) {
-      setStatus(data.error || "Unable to generate tailored resume.");
+      setStatus([data.error || "Unable to generate tailored resume.", data.detail, data.fix].filter(Boolean).join(" "));
       return;
     }
 
     setResult(data.result);
     setPdfName(data.fileName || "tailored-resume.pdf");
     setPdfUrl(base64PdfToUrl(data.pdfBase64));
-    setStatus(data.result?.aiUsed ? "GPT-tailored resume PDF generated." : "Tailored resume PDF generated with local fallback. Add OPENAI_API_KEY for GPT output.");
+    setStatus("High-standard GPT resume PDF generated in Apply Friend format.");
   }
 
   async function scoreAts(event) {
@@ -52,16 +60,24 @@ export default function TailorClient() {
     formData.append("resumeText", resumeText);
     formData.append("jobDescription", jobDescription);
 
-    const response = await fetch("/api/ai/ats-score", { method: "POST", body: formData });
-    const data = await response.json();
+    let response;
+    let data;
+    try {
+      response = await fetch("/api/ai/ats-score", { method: "POST", body: formData });
+      data = await response.json();
+    } catch (error) {
+      setAtsBusy(false);
+      setAtsStatus(`Unable to score resume. ${error.message}`);
+      return;
+    }
     setAtsBusy(false);
     if (!response.ok) {
-      setAtsStatus(data.error || "Unable to score resume.");
+      setAtsStatus([data.error || "Unable to score resume.", data.detail, data.fix].filter(Boolean).join(" "));
       return;
     }
 
     setAtsResult(data.result);
-    setAtsStatus(data.result?.aiUsed ? "GPT ATS score generated." : "ATS score generated with local fallback. Add OPENAI_API_KEY for GPT scoring.");
+    setAtsStatus("GPT ATS score generated.");
   }
 
   function revokePdf() {
@@ -109,8 +125,8 @@ export default function TailorClient() {
             {atsBusy ? "Scoring..." : "Get ATS score"}
           </button>
         </div>
-        {status && <p className={`status-line ${status.includes("Unable") ? "error-line" : ""}`}>{status}</p>}
-        {atsStatus && <p className={`status-line ${atsStatus.includes("Unable") ? "error-line" : ""}`}>{atsStatus}</p>}
+        {status && <p className={`status-line ${status.includes("Unable") || status.includes("not active") || status.includes("failed") ? "error-line" : ""}`}>{status}</p>}
+        {atsStatus && <p className={`status-line ${atsStatus.includes("Unable") || atsStatus.includes("not active") || atsStatus.includes("failed") ? "error-line" : ""}`}>{atsStatus}</p>}
       </form>
 
       <div className="dashboard-grid two">
@@ -120,7 +136,7 @@ export default function TailorClient() {
           {result && (
             <div className="dashboard-grid">
               <section>
-                <p className="eyebrow">{result.aiUsed ? "GPT generated" : "Local fallback"}</p>
+                <p className="eyebrow">GPT generated</p>
                 <h4>{result.candidateName}</h4>
                 <p><strong>{result.targetRole}</strong></p>
                 <p>{result.professionalSummary}</p>

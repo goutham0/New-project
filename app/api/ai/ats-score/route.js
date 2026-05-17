@@ -17,7 +17,22 @@ export async function POST(request) {
     return NextResponse.json({ error: "Upload a readable resume file or paste resume text." }, { status: 400 });
   }
 
-  const result = await scoreResumeForAts({ resumeText, jobDescription });
+  let result;
+  try {
+    result = await scoreResumeForAts({ resumeText, jobDescription, requireAi: true });
+  } catch (error) {
+    await addAudit({
+      userId: user.id,
+      eventType: "ATS_SCORE_FAILED",
+      message: "ATS resume score generation failed.",
+      metadata: { reason: error.message }
+    });
+    return NextResponse.json({
+      error: "GPT ATS scoring is not active yet.",
+      detail: error.message,
+      fix: "Add OPENAI_API_KEY and OPENAI_MODEL in your environment variables, redeploy/restart, then try again."
+    }, { status: 503 });
+  }
   await addAudit({
     userId: user.id,
     eventType: "ATS_SCORE_GENERATED",

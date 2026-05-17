@@ -48,7 +48,22 @@ export async function POST(request) {
     const job = await getJobById(jobId);
     if (!job) continue;
     if (job.applyType === "manual") continue;
-    const pkg = await buildPreparedPackage({ profile, resumeText: resume.content, job });
+    let pkg;
+    try {
+      pkg = await buildPreparedPackage({ profile, resumeText: resume.content, job });
+    } catch (error) {
+      await addAudit({
+        userId: user.id,
+        eventType: "APPLICATION_PREPARATION_FAILED",
+        message: "Application package preparation failed.",
+        metadata: { jobId, reason: error.message }
+      });
+      return NextResponse.json({
+        error: "GPT application preparation is not active yet.",
+        detail: error.message,
+        fix: "Add OPENAI_API_KEY and OPENAI_MODEL in your environment variables, redeploy/restart, then prepare applications again."
+      }, { status: 503 });
+    }
     let application = await createApplication({
       userId: user.id,
       jobId: job.id,
@@ -90,7 +105,8 @@ async function buildPreparedPackage({ profile, resumeText, job }) {
   const tailored = await generateTailoredResume({
     resumeText,
     jobDescription: buildJobDescription(job),
-    profile
+    profile,
+    requireAi: true
   });
   const pdf = createResumePdf(tailored);
 
