@@ -3,7 +3,7 @@
 export default function ExtensionSetup() {
   return (
     <div className="extension-steps">
-      <a className="primary-button" href="/applypilot-extension.zip" download>
+      <a className="primary-button" href="/applyfriend-extension.zip" download>
         Download Chrome extension
       </a>
       <div className="extension-checklist">

@@ -27,7 +27,7 @@ export default function DashboardNav({ user }) {
     <aside className="sidebar">
       <Link className="brand" href="/">
         <span className="brand-mark">A</span>
-        <span>ApplyPilot</span>
+        <span>Apply Friend</span>
       </Link>
       <nav aria-label="Candidate navigation">
         {links.map(([href, label]) => (

@@ -13,7 +13,7 @@ export default function AssistedApplyPage() {
       </div>
       <div className="extension-panel" style={{ marginBottom: 16 }}>
         <h3>Chrome extension download</h3>
-        <p>Download the extension and add it to Chrome once. After that, click Prepare and open on any assisted job and the redirected employer form can be autofilled automatically.</p>
+        <p>Download the Apply Friend extension and add it to Chrome once. After that, click Prepare and open on any assisted job and the redirected employer form can be autofilled automatically.</p>
         <ExtensionSetup />
       </div>
       <JobsBrowser mode="assisted" />

@@ -39,7 +39,7 @@ export default function PublicNav({ isAuthenticated = false }) {
     <header className="topbar">
       <Link className="brand" href="/">
         <span className="brand-mark">A</span>
-        <span>ApplyPilot</span>
+        <span>Apply Friend</span>
       </Link>
       <nav className="nav-links" aria-label="Public navigation">
         {links.map(([id, label]) => (

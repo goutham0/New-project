@@ -40,7 +40,7 @@ export default function AuthForm({ mode }) {
       <section className="auth-card">
         <Link className="brand" href="/">
           <span className="brand-mark">A</span>
-          <span>ApplyPilot</span>
+          <span>Apply Friend</span>
         </Link>
         <div style={{ height: 28 }} />
         <p className="eyebrow">{isSignup ? "Create account" : "Welcome back"}</p>

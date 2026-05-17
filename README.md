@@ -1,6 +1,6 @@
-# ApplyPilot
+# Apply Friend
 
-ApplyPilot is a full-stack MVP for an AI job application platform. It includes a polished public website, signup/login, candidate profile, resume upload, manual apply, assisted apply, direct bulk apply, applications tracker, resume tailoring, backend API routes, and a Chrome extension scaffold.
+Apply Friend is a full-stack MVP for an AI job application platform. It includes a polished public website, signup/login, candidate profile, resume upload, manual apply, assisted apply, direct bulk apply, applications tracker, resume tailoring, backend API routes, and a Chrome extension scaffold.
 
 ## Tech Stack
 
@@ -92,7 +92,7 @@ chrome://extensions
 
 Enable Developer Mode, choose "Load unpacked", and select the `extension` folder.
 
-In ApplyPilot, open Assisted Apply and click **Connect extension**. Paste the generated token into the extension popup once. Then click **Prepare and open** on an assisted job, open the extension popup on the employer form, and click **Autofill page**.
+In Apply Friend, open Assisted Apply. Then click **Prepare and open** on an assisted job, open the extension popup on the employer form, and click **Autofill page**.
 
 The extension reads the latest prepared assisted-apply package from:
 
@@ -100,7 +100,7 @@ The extension reads the latest prepared assisted-apply package from:
 /api/extension/prepared-application
 ```
 
-The candidate must use the extension token generated from their logged-in ApplyPilot account.
+The candidate must start from their logged-in Apply Friend account.
 
 ## Main Routes
 

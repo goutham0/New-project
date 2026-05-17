@@ -179,7 +179,7 @@ export default function JobsBrowser({ mode }) {
           </div>
           <label className="consent-row">
             <input type="checkbox" checked={directConsent} onChange={(event) => setDirectConsent(event.target.checked)} />
-            <span>I reviewed the selected jobs and authorize ApplyPilot to submit these applications through supported employer or ATS integrations.</span>
+            <span>I reviewed the selected jobs and authorize Apply Friend to submit these applications through supported employer or ATS integrations.</span>
           </label>
           <div className="button-row compact">
             <button className="primary-button" type="button" disabled={!directConsent || submitting} onClick={submitDirectBulk}>
@@ -372,7 +372,7 @@ function withApplyPilotHandoff(url, token) {
   if (!token) return target;
   const [baseAndQuery, existingHash = ""] = target.split("#");
   const params = new URLSearchParams(existingHash);
-  params.set("applypilot_base", window.location.origin);
-  params.set("applypilot_token", token);
+  params.set("applyfriend_base", window.location.origin);
+  params.set("applyfriend_token", token);
   return `${baseAndQuery}#${params.toString()}`;
 }

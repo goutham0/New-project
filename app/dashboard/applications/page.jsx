@@ -7,7 +7,7 @@ export default function ApplicationsPage() {
         <div className="dashboard-title">
           <p className="eyebrow">Applications</p>
           <h1>Application tracker</h1>
-          <p>Review packages, approve submissions, open assisted apply, and track submitted applications.</p>
+          <p>Track submitted applications by company, role, date, and confirmation id.</p>
         </div>
       </div>
       <ApplicationsClient />

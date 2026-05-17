@@ -1,138 +1,76 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export default function ApplicationsClient() {
   const [applications, setApplications] = useState([]);
-  const [consent, setConsent] = useState(false);
   const [status, setStatus] = useState("");
 
-  async function load() {
-    const response = await fetch("/api/applications");
-    const data = await response.json();
-    setApplications(data.applications || []);
-  }
-
   useEffect(() => {
+    async function load() {
+      const response = await fetch("/api/applications");
+      const data = await response.json();
+      if (!response.ok) {
+        setStatus(data.error || "Unable to load applications.");
+        return;
+      }
+      setApplications(data.applications || []);
+    }
     load();
   }, []);
 
-  async function action(application, actionName) {
-    const applicationId = application.id;
-    if (actionName === "submit" && !consent) {
-      setStatus("Confirm consent before direct submission.");
-      return;
-    }
-    const response = await fetch("/api/applications/submit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ applicationIds: [applicationId], action: actionName, consentConfirmed: consent })
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      setStatus(data.error || "Unable to update application.");
-      return;
-    }
-    setStatus("Application updated.");
-    if (actionName === "assist" && application.package?.job?.applyUrl) {
-      window.open(application.package.job.applyUrl, "_blank", "noopener");
-    }
-    await load();
-  }
+  const submittedApplications = useMemo(
+    () => applications.filter((application) => application.status === "SUBMITTED"),
+    [applications]
+  );
 
   return (
     <div className="dashboard-grid">
       <article className="dashboard-card">
-        <h3>Candidate consent</h3>
-        <label style={{ display: "grid", gridTemplateColumns: "20px 1fr", gap: 12 }}>
-          <input type="checkbox" checked={consent} onChange={(event) => setConsent(event.target.checked)} />
-          <span>
-            I confirm that the information in these applications is accurate, and I authorize this platform to submit
-            selected applications on my behalf through supported employer or ATS integrations.
-          </span>
-        </label>
-        {status && <p className="status-line">{status}</p>}
+        <h3>Applied jobs</h3>
+        <p>Only submitted applications are listed here. Resume, cover letter, and answer details stay in the review step before submission.</p>
+        {status && <p className="status-line error-line">{status}</p>}
       </article>
 
-      {applications.map((application) => (
-        <article className="tracker-card" key={application.id}>
-          <div className="dashboard-header" style={{ marginBottom: 0 }}>
-            <div>
-              <span className={`tag ${application.applicationType === "DIRECT" ? "direct" : "assisted"}`}>
-                {application.applicationType}
-              </span>
-              <h3>{application.package?.tailoredResume?.headline || application.jobId}</h3>
-              <p>Match score: {application.matchScore}%</p>
-            </div>
-            <strong className="score">{application.status}</strong>
-          </div>
-          <div className="generated-grid">
-            <article>
-              <h4>Tailored resume</h4>
-              <p>{application.package?.tailoredResume?.summary}</p>
-              <ul>
-                {(application.package?.tailoredResume?.bullets || []).slice(0, 3).map((bullet) => (
-                  <li key={bullet}>{bullet}</li>
-                ))}
-              </ul>
-              {application.package?.tailoredResumePdfBase64 && (
-                <a
-                  className="secondary-button slim"
-                  href={`data:application/pdf;base64,${application.package.tailoredResumePdfBase64}`}
-                  download={application.package.tailoredResumePdfFileName || "tailored-resume.pdf"}
-                >
-                  Download PDF
-                </a>
-              )}
+      <div className="applications-list">
+        {submittedApplications.map((application) => {
+          const job = application.package?.job || {};
+          return (
+            <article className="application-row" key={application.id}>
+              <div>
+                <span className={`tag ${application.applicationType === "DIRECT" ? "direct" : "assisted"}`}>
+                  {application.applicationType === "DIRECT" ? "Direct apply" : "Assisted/manual"}
+                </span>
+                <h3>{job.company || "Company not listed"}</h3>
+                <p>{job.title || application.jobId}</p>
+              </div>
+              <div>
+                <strong className="score">Submitted</strong>
+                <p>{formatDate(application.updatedAt || application.createdAt)}</p>
+              </div>
+              <div>
+                <span className="tag direct">{application.externalApplicationId || "Recorded"}</span>
+              </div>
             </article>
-            <article>
-              <h4>Cover letter</h4>
-              <p>{application.package?.coverLetter}</p>
-            </article>
-            <article>
-              <h4>Screening answers</h4>
-              {(application.package?.answers || []).map((answer) => (
-                <p key={answer.question}>
-                  <strong>{answer.question}</strong>
-                  <br />
-                  {answer.answer}
-                </p>
-              ))}
-            </article>
-          </div>
-          <div className="tracker-actions">
-            {application.status === "SUBMITTED" ? (
-              <span className="tag direct">Submitted ID: {application.externalApplicationId || "Recorded"}</span>
-            ) : (
-              <>
-                <button className="secondary-button" type="button" onClick={() => action(application, "approve")}>
-                  Approve
-                </button>
-                {application.applicationType === "DIRECT" && (
-                  <button className="primary-button" type="button" disabled={!consent} onClick={() => action(application, "submit")}>
-                    Submit through API
-                  </button>
-                )}
-                {application.applicationType === "ASSISTED" && (
-                  <button className="primary-button" type="button" onClick={() => action(application, "assist")}>
-                    Open employer form
-                  </button>
-                )}
-                <button className="secondary-button" type="button" onClick={() => action(application, "manual")}>
-                  Mark submitted
-                </button>
-              </>
-            )}
-          </div>
-        </article>
-      ))}
+          );
+        })}
+      </div>
 
-      {!applications.length && (
+      {!submittedApplications.length && (
         <div className="empty-state">
-          <strong>No applications yet.</strong>
-          <p>Prepare jobs from assisted apply or direct bulk apply first.</p>
+          <strong>No submitted applications yet.</strong>
+          <p>After you submit direct, assisted, or manual applications, they will appear here by company and role.</p>
         </div>
       )}
     </div>
   );
+}
+
+function formatDate(value) {
+  if (!value) return "Date not recorded";
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  }).format(new Date(value));
 }

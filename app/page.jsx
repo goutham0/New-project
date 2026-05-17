@@ -53,7 +53,7 @@ export default async function HomePage() {
             candidate-reviewed browser autofill.
           </p>
         </div>
-        <div className="hero-preview" aria-label="ApplyPilot workflow preview">
+        <div className="hero-preview" aria-label="Apply Friend workflow preview">
           <div className="preview-bar">
             <span>Profile 92%</span>
             <span>Ready for review</span>
@@ -83,7 +83,7 @@ export default async function HomePage() {
           <p className="eyebrow">About</p>
           <h2>A neat operating system for your job search</h2>
           <p>
-            ApplyPilot combines profile management, resume tailoring, job discovery, extension-assisted apply, and
+            Apply Friend combines profile management, resume tailoring, job discovery, extension-assisted apply, and
             application tracking in one polished candidate workspace.
           </p>
         </div>

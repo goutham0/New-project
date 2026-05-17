@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "ApplyPilot Assisted Apply",
+  "name": "Apply Friend Assisted Apply",
   "version": "1.2.0",
   "description": "Autofill candidate profile and prepared application answers on unsupported employer forms.",
   "permissions": ["activeTab", "storage", "scripting", "tabs"],
@@ -10,7 +10,7 @@
   ],
   "action": {
     "default_popup": "popup/index.html",
-    "default_title": "ApplyPilot"
+    "default_title": "Apply Friend"
   },
   "content_scripts": [
     {
