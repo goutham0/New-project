@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export default function TailorClient() {
+export default function TailorClient({ savedResumeName = "" }) {
   const [resumeFile, setResumeFile] = useState(null);
   const [resumeText, setResumeText] = useState("");
   const [jobDescription, setJobDescription] = useState("");
@@ -14,6 +14,7 @@ export default function TailorClient() {
   const [atsStatus, setAtsStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [atsBusy, setAtsBusy] = useState(false);
+  const hasResumeInput = Boolean(resumeFile || resumeText.trim() || savedResumeName);
 
   async function generateTailoredResume(event) {
     event.preventDefault();
@@ -90,7 +91,7 @@ export default function TailorClient() {
       <form className="form-grid dashboard-card" onSubmit={generateTailoredResume}>
         <div>
           <h3>Generate tailored resume PDF</h3>
-          <p>Upload a resume, paste the JD, and download a clean ATS-friendly PDF.</p>
+          <p>{savedResumeName ? `Using saved profile resume: ${savedResumeName}` : "Upload a resume, paste the JD, and download a clean ATS-friendly PDF."}</p>
         </div>
         <label>
           <span>Resume upload</span>
@@ -105,7 +106,7 @@ export default function TailorClient() {
           <textarea
             value={resumeText}
             onChange={(event) => setResumeText(event.target.value)}
-            placeholder="Paste resume text if the uploaded file is not readable."
+            placeholder={savedResumeName ? "Optional: paste resume text here to override the saved profile resume." : "Paste resume text if the uploaded file is not readable."}
           />
         </label>
         <label>
@@ -118,10 +119,10 @@ export default function TailorClient() {
           />
         </label>
         <div className="button-row compact">
-          <button className="primary-button" type="submit" disabled={busy || (!resumeFile && !resumeText.trim())}>
+          <button className="primary-button" type="submit" disabled={busy || !hasResumeInput}>
             {busy ? "Generating..." : "Generate PDF"}
           </button>
-          <button className="secondary-button" type="button" disabled={atsBusy || (!resumeFile && !resumeText.trim())} onClick={scoreAts}>
+          <button className="secondary-button" type="button" disabled={atsBusy || !hasResumeInput} onClick={scoreAts}>
             {atsBusy ? "Scoring..." : "Get ATS score"}
           </button>
         </div>

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { currentUser, userFromAssistedApplyToken, userFromExtensionRequest } from "@/lib/auth";
-import { getProfile, listApplications } from "@/lib/store";
+import { getProfile, listApplications, updateApplication } from "@/lib/store";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -12,6 +12,9 @@ export async function GET(request) {
   const assisted = handoff?.applicationId
     ? applications.find((item) => item.id === handoff.applicationId && item.applicationType === "ASSISTED")
     : applications.find((item) => item.applicationType === "ASSISTED");
+  if (handoff?.applicationId && assisted && assisted.status === "NEEDS_REVIEW") {
+    await updateApplication(user.id, assisted.id, { status: "ASSISTED_OPENED" });
+  }
   return NextResponse.json({
     profile,
     application: assisted || null

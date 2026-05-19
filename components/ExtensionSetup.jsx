@@ -12,6 +12,7 @@ export default function ExtensionSetup() {
         <span>3. Click Load unpacked and select the unzipped extension folder.</span>
         <span>4. Click Prepare and open on any assisted job.</span>
         <span>5. The extension will detect the prepared job and autofill. You can also click the extension icon and press Autofill page.</span>
+        <span>6. After you manually submit, click Mark submitted in the extension popup to record the application.</span>
       </div>
     </div>
   );

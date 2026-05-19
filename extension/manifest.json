@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Apply Friend Assisted Apply",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Autofill candidate profile and prepared application answers on unsupported employer forms.",
   "permissions": ["activeTab", "storage", "scripting", "tabs"],
   "host_permissions": [

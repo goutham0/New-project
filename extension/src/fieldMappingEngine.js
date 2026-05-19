@@ -6,10 +6,22 @@ window.ApplyPilotFieldMapping = {
   labelFor(input) {
     const id = input.getAttribute("id");
     const label = id ? document.querySelector(`label[for="${CSS.escape(id)}"]`) : null;
+    const labelledBy = input.getAttribute("aria-labelledby")
+      ?.split(/\s+/)
+      .map((item) => document.getElementById(item)?.innerText)
+      .filter(Boolean)
+      .join(" ");
     const aria = input.getAttribute("aria-label");
     const placeholder = input.getAttribute("placeholder");
+    const fieldset = input.closest("fieldset")?.innerText || "";
     const nearby = input.closest("label")?.innerText || input.parentElement?.innerText || "";
-    return [label?.innerText, aria, placeholder, nearby, input.name].filter(Boolean).join(" ");
+    return [fieldset, label?.innerText, labelledBy, aria, placeholder, nearby, input.name, input.id].filter(Boolean).join(" ");
+  },
+
+  optionTextFor(input) {
+    const id = input.getAttribute("id");
+    const label = id ? document.querySelector(`label[for="${CSS.escape(id)}"]`) : null;
+    return [label?.innerText, input.getAttribute("aria-label"), input.value].filter(Boolean).join(" ");
   },
 
   valueFor(label, profile, application) {
@@ -40,8 +52,58 @@ window.ApplyPilotFieldMapping = {
 
     const matchingAnswer = answers.find((answer) => {
       const question = this.normalize(answer.question);
-      return question && (text.includes(question.slice(0, 24)) || question.includes(text.slice(0, 24)));
+      return question && this.questionMatches(text, question);
     });
     return matchingAnswer?.answer || "";
+  },
+
+  choiceValueFor(label, profile, application) {
+    const text = this.normalize(label);
+    if (text.includes("sponsor")) return this.yesNo(profile.sponsorshipRequired);
+    if (text.includes("authorized") || text.includes("authorization") || text.includes("work in")) {
+      return this.isAuthorized(profile.workAuthorization) ? "yes" : this.yesNo(profile.workAuthorization);
+    }
+    return this.valueFor(label, profile, application);
+  },
+
+  choiceMatches(optionText, desiredValue) {
+    const option = this.normalize(optionText);
+    const desired = this.normalize(desiredValue);
+    if (!option || !desired) return false;
+    if (option === desired || option.includes(desired) || desired.includes(option)) return true;
+    const desiredYesNo = this.yesNo(desired);
+    const optionYesNo = this.yesNo(option);
+    return Boolean(desiredYesNo && optionYesNo && desiredYesNo === optionYesNo);
+  },
+
+  isSafeCheckbox(label) {
+    const text = this.normalize(label);
+    if (text.includes("terms") || text.includes("privacy") || text.includes("consent") || text.includes("certify") || text.includes("confirm")) {
+      return false;
+    }
+    return text.includes("sponsor") || text.includes("authorized") || text.includes("authorization") || text.includes("remote") || text.includes("relocate");
+  },
+
+  questionMatches(labelText, questionText) {
+    if (!labelText || !questionText) return false;
+    if (labelText.includes(questionText) || questionText.includes(labelText)) return true;
+    const labelWords = new Set(labelText.split(" ").filter((word) => word.length > 3));
+    const questionWords = questionText.split(" ").filter((word) => word.length > 3);
+    if (!labelWords.size || !questionWords.length) return false;
+    const overlap = questionWords.filter((word) => labelWords.has(word)).length;
+    return overlap >= Math.min(3, questionWords.length);
+  },
+
+  yesNo(value) {
+    const text = this.normalize(value);
+    if (!text) return "";
+    if (/\b(no|false|n)\b/.test(text) || text.includes("not require") || text.includes("does not require")) return "no";
+    if (/\b(yes|true|y)\b/.test(text) || text.includes("authorized") || text.includes("citizen") || text.includes("permanent resident")) return "yes";
+    return "";
+  },
+
+  isAuthorized(value) {
+    const text = this.normalize(value);
+    return text.includes("authorized") || text.includes("citizen") || text.includes("permanent resident") || text === "yes";
   }
 };

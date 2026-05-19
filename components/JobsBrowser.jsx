@@ -48,7 +48,7 @@ export default function JobsBrowser({ mode }) {
     });
     const data = await response.json();
     if (!response.ok) {
-      setStatus(data.error || "Unable to prepare applications.");
+      setStatus(formatApiError(data, "Unable to prepare applications."));
       return null;
     }
     return data.applications || [];
@@ -64,8 +64,8 @@ export default function JobsBrowser({ mode }) {
       setStatus("Unable to prepare this assisted application.");
       return;
     }
-    setStatus("Prepared. Opening employer form. Use the extension popup to autofill.");
-    const targetUrl = withApplyPilotHandoff(job.applyUrl, applications[0].handoffToken);
+    setStatus("Prepared. Opening secure handoff, then employer form. The extension will autofill automatically when possible.");
+    const targetUrl = withApplyFriendHandoffPage(job.applyUrl, applications[0].handoffToken);
     if (applyWindow) {
       applyWindow.opener = null;
       applyWindow.location.href = targetUrl;
@@ -118,7 +118,7 @@ export default function JobsBrowser({ mode }) {
     const data = await response.json();
     setSubmitting(false);
     if (!response.ok) {
-      setStatus(data.error || "Unable to submit selected applications.");
+      setStatus(formatApiError(data, "Unable to submit selected applications."));
       return;
     }
     setStatus(`${data.applications.length} direct application(s) submitted.`);
@@ -348,7 +348,7 @@ function submissionRows(submission) {
 }
 
 function isErrorStatus(status) {
-  return /unable|required|complete|confirm/i.test(status);
+  return /unable|required|complete|confirm|missing|failed|expired|paid/i.test(status);
 }
 
 function formatSalary(job) {
@@ -367,12 +367,21 @@ function normalizeApplyUrl(url) {
   return `https://${value}`;
 }
 
-function withApplyPilotHandoff(url, token) {
+function withApplyFriendHandoffPage(url, token) {
   const target = normalizeApplyUrl(url);
   if (!token) return target;
-  const [baseAndQuery, existingHash = ""] = target.split("#");
-  const params = new URLSearchParams(existingHash);
+  const [baseAndQuery] = target.split("#");
+  const handoffUrl = new URL("/assisted-handoff", window.location.origin);
+  handoffUrl.searchParams.set("to", baseAndQuery);
+  const params = new URLSearchParams();
   params.set("applyfriend_base", window.location.origin);
   params.set("applyfriend_token", token);
-  return `${baseAndQuery}#${params.toString()}`;
+  return `${handoffUrl.toString()}#${params.toString()}`;
+}
+
+function formatApiError(data, fallback) {
+  const missing = Array.isArray(data?.missing) && data.missing.length
+    ? ` Missing profile fields: ${data.missing.join(", ")}.`
+    : "";
+  return [data?.error || fallback, data?.detail, data?.fix, missing].filter(Boolean).join(" ");
 }

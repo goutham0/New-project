@@ -37,3 +37,9 @@ button {
   font-weight: 800;
   cursor: pointer;
 }
+
+button.secondary {
+  color: #0f332d;
+  background: #ffffff;
+  border-color: #cbd9d2;
+}

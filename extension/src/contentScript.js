@@ -8,14 +8,37 @@ if (!window.__APPLYPILOT_ASSISTED_APPLY_READY__) {
 
     for (const field of fields) {
       const type = String(field.getAttribute("type") || "").toLowerCase();
-      if (["button", "submit", "reset", "hidden", "password", "checkbox", "radio"].includes(type)) continue;
+      if (["button", "submit", "reset", "hidden", "password"].includes(type)) continue;
 
       const label = window.ApplyPilotFieldMapping.labelFor(field);
       const value = window.ApplyPilotFieldMapping.valueFor(label, profile, application);
       if (!value) continue;
 
+      if (type === "radio") {
+        const choiceValue = window.ApplyPilotFieldMapping.choiceValueFor(label, profile, application);
+        const optionText = window.ApplyPilotFieldMapping.optionTextFor(field);
+        if (window.ApplyPilotFieldMapping.choiceMatches(optionText || field.value, choiceValue)) {
+          setNativeChecked(field, true);
+          filled += 1;
+        }
+        continue;
+      }
+
+      if (type === "checkbox") {
+        const choiceValue = window.ApplyPilotFieldMapping.choiceValueFor(label, profile, application);
+        const optionText = window.ApplyPilotFieldMapping.optionTextFor(field);
+        if (window.ApplyPilotFieldMapping.isSafeCheckbox(label) && window.ApplyPilotFieldMapping.choiceMatches(optionText || field.value || label, choiceValue)) {
+          setNativeChecked(field, true);
+          filled += 1;
+        }
+        continue;
+      }
+
       if (field.tagName === "SELECT") {
-        const option = [...field.options].find((item) => item.text.toLowerCase().includes(String(value).toLowerCase()));
+        const choiceValue = window.ApplyPilotFieldMapping.choiceValueFor(label, profile, application);
+        const option = [...field.options].find((item) =>
+          window.ApplyPilotFieldMapping.choiceMatches(`${item.text} ${item.value}`, choiceValue)
+        );
         if (option) {
           field.value = option.value;
           field.dispatchEvent(new Event("change", { bubbles: true }));
@@ -38,6 +61,18 @@ if (!window.__APPLYPILOT_ASSISTED_APPLY_READY__) {
       setter.call(field, String(value));
     } else {
       field.value = String(value);
+    }
+    field.dispatchEvent(new Event("input", { bubbles: true }));
+    field.dispatchEvent(new Event("change", { bubbles: true }));
+    field.dispatchEvent(new Event("blur", { bubbles: true }));
+  }
+
+  function setNativeChecked(field, value) {
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "checked")?.set;
+    if (setter) {
+      setter.call(field, Boolean(value));
+    } else {
+      field.checked = Boolean(value);
     }
     field.dispatchEvent(new Event("input", { bubbles: true }));
     field.dispatchEvent(new Event("change", { bubbles: true }));

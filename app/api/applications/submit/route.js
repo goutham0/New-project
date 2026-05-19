@@ -7,6 +7,9 @@ export async function POST(request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { applicationIds = [], action = "submit", consentConfirmed = false } = await request.json();
+  if (!Array.isArray(applicationIds) || !applicationIds.length) {
+    return NextResponse.json({ error: "Select at least one prepared application before submitting." }, { status: 400 });
+  }
   const existing = await listApplications(user.id);
   const updated = [];
 
@@ -55,5 +58,9 @@ export async function POST(request) {
     message: `${updated.length} application(s) updated with action ${action}.`,
     metadata: { action }
   });
-  return NextResponse.json({ applications: updated.filter(Boolean) });
+  const applications = updated.filter(Boolean);
+  if (!applications.length) {
+    return NextResponse.json({ error: "No matching applications were found to update." }, { status: 404 });
+  }
+  return NextResponse.json({ applications });
 }

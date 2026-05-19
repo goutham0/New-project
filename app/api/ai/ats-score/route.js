@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
-import { addAudit } from "@/lib/store";
+import { getLatestResume, addAudit } from "@/lib/store";
 import { extractResumeText } from "@/lib/resumeText";
 import { scoreResumeForAts } from "@/lib/openaiResume";
 
@@ -11,10 +11,21 @@ export async function POST(request) {
   const formData = await request.formData();
   const file = formData.get("resume");
   const jobDescription = String(formData.get("jobDescription") || "").trim();
-  const resumeText = file && typeof file !== "string" ? await extractResumeText(file) : String(formData.get("resumeText") || "").trim();
+  const pastedResumeText = String(formData.get("resumeText") || "").trim();
+  let resumeText = "";
+  if (file && typeof file !== "string") {
+    resumeText = await extractResumeText(file);
+    if (!resumeText.trim()) resumeText = pastedResumeText;
+  } else {
+    resumeText = pastedResumeText;
+  }
+  if (!resumeText.trim()) {
+    const savedResume = await getLatestResume(user.id);
+    resumeText = String(savedResume?.content || "").trim();
+  }
 
   if (!resumeText.trim()) {
-    return NextResponse.json({ error: "Upload a readable resume file or paste resume text." }, { status: 400 });
+    return NextResponse.json({ error: "Upload a readable resume file, paste resume text, or upload a resume in Profile first." }, { status: 400 });
   }
 
   let result;
@@ -28,9 +39,9 @@ export async function POST(request) {
       metadata: { reason: error.message }
     });
     return NextResponse.json({
-      error: "GPT ATS scoring is not active yet.",
+      error: "GPT ATS scoring failed.",
       detail: error.message,
-      fix: "Add OPENAI_API_KEY and OPENAI_MODEL in your environment variables, redeploy/restart, then try again."
+      fix: openAiFix(error.message)
     }, { status: 503 });
   }
   await addAudit({
@@ -41,4 +52,18 @@ export async function POST(request) {
   });
 
   return NextResponse.json({ result });
+}
+
+function openAiFix(message = "") {
+  const text = message.toLowerCase();
+  if (text.includes("quota") || text.includes("billing")) {
+    return "OpenAI billing/quota is blocking the request. Add credits or raise your project limit, then try again.";
+  }
+  if (text.includes("model") || text.includes("does not exist") || text.includes("not found")) {
+    return "The selected OPENAI_MODEL is not available for this project. In Vercel set OPENAI_MODEL=gpt-5.5, or use gpt-5.4 if your account does not have gpt-5.5 access, then redeploy.";
+  }
+  if (text.includes("api key") || text.includes("unauthorized") || text.includes("invalid")) {
+    return "The OpenAI key is invalid or missing. Add the full sk- secret as OPENAI_API_KEY in Vercel and redeploy.";
+  }
+  return "Check OPENAI_API_KEY, OPENAI_MODEL, OpenAI billing, and the uploaded resume text, then redeploy/restart if environment variables changed.";
 }

@@ -52,6 +52,7 @@ export async function POST(request) {
     try {
       pkg = await buildPreparedPackage({ profile, resumeText: resume.content, job });
     } catch (error) {
+      console.error("buildPreparedPackage error:", error);
       await addAudit({
         userId: user.id,
         eventType: "APPLICATION_PREPARATION_FAILED",
@@ -102,12 +103,23 @@ export async function POST(request) {
 
 async function buildPreparedPackage({ profile, resumeText, job }) {
   const fallback = generateApplicationPackage({ profile, resumeText, job });
-  const tailored = await generateTailoredResume({
-    resumeText,
-    jobDescription: buildJobDescription(job),
-    profile,
-    requireAi: true
-  });
+  let tailored;
+  try {
+    tailored = await generateTailoredResume({
+      resumeText,
+      jobDescription: buildJobDescription(job),
+      profile,
+      requireAi: true
+    });
+  } catch (error) {
+    console.warn("generateTailoredResume failed, using local fallback:", error.message);
+    tailored = await generateTailoredResume({
+      resumeText,
+      jobDescription: buildJobDescription(job),
+      profile,
+      requireAi: false
+    });
+  }
   const pdf = createResumePdf(tailored);
 
   return {

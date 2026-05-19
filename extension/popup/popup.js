@@ -13,6 +13,28 @@ document.querySelector("#autofill").addEventListener("click", async () => {
   }
 });
 
+document.querySelector("#markSubmitted").addEventListener("click", async () => {
+  try {
+    statusEl.textContent = "Recording assisted submission...";
+    const stored = await chrome.storage.sync.get(["applyPilotBaseUrl", "applyPilotHandoffToken"]);
+    if (!stored.applyPilotBaseUrl || !stored.applyPilotHandoffToken) {
+      throw new Error("No prepared assisted application found. Open the job from Apply Friend first.");
+    }
+    const response = await fetch(`${stored.applyPilotBaseUrl}/api/extension/mark-submitted`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: stored.applyPilotHandoffToken })
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || "Unable to mark submitted.");
+    }
+    statusEl.textContent = "Recorded as submitted in Apply Friend.";
+  } catch (error) {
+    statusEl.textContent = error.message || "Unable to record submission.";
+  }
+});
+
 async function ensureAutofillScripts(tab) {
   if (!tab?.id || !/^https?:\/\//i.test(tab.url || "")) {
     throw new Error("Open the employer application page before clicking Autofill.");
