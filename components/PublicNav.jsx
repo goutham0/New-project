@@ -12,6 +12,7 @@ const links = [
 
 export default function PublicNav({ isAuthenticated = false }) {
   const [active, setActive] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const sections = links
@@ -36,18 +37,32 @@ export default function PublicNav({ isAuthenticated = false }) {
   }, []);
 
   return (
-    <header className="topbar">
+    <header className={`topbar ${menuOpen ? "menu-open" : ""}`}>
       <Link className="brand" href="/">
-        <span className="brand-mark">A</span>
+        <span className="brand-mark">AF</span>
         <span>Apply Friend</span>
       </Link>
+      <button
+        className="mobile-menu-button"
+        type="button"
+        aria-label={menuOpen ? "Close menu" : "Open menu"}
+        aria-expanded={menuOpen}
+        onClick={() => setMenuOpen((current) => !current)}
+      >
+        <span />
+        <span />
+        <span />
+      </button>
       <nav className="nav-links" aria-label="Public navigation">
         {links.map(([id, label]) => (
           <a
             className={active === id ? "active" : ""}
             href={`#${id}`}
             key={id}
-            onClick={() => setActive(id)}
+            onClick={() => {
+              setActive(id);
+              setMenuOpen(false);
+            }}
           >
             {label}
           </a>
@@ -55,11 +70,11 @@ export default function PublicNav({ isAuthenticated = false }) {
       </nav>
       <div className="actions">
         {isAuthenticated ? (
-          <Link className="primary-button" href="/dashboard">Dashboard</Link>
+          <Link className="primary-button" href="/dashboard" onClick={() => setMenuOpen(false)}>Dashboard</Link>
         ) : (
           <>
-            <Link className="secondary-button" href="/login">Login</Link>
-            <Link className="primary-button" href="/signup">Signup</Link>
+            <Link className="secondary-button" href="/login" onClick={() => setMenuOpen(false)}>Login</Link>
+            <Link className="primary-button" href="/signup" onClick={() => setMenuOpen(false)}>Signup</Link>
           </>
         )}
       </div>

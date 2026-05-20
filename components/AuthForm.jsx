@@ -39,7 +39,7 @@ export default function AuthForm({ mode }) {
     <main className="auth-page">
       <section className="auth-card">
         <Link className="brand" href="/">
-          <span className="brand-mark">A</span>
+          <span className="brand-mark">AF</span>
           <span>Apply Friend</span>
         </Link>
         <div style={{ height: 28 }} />

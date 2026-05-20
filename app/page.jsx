@@ -32,12 +32,17 @@ export default async function HomePage() {
 
       <section className="hero">
         <div className="hero-content">
-          <p className="eyebrow">AI job application assistant</p>
+          <p className="eyebrow">Candidate-first AI apply workspace</p>
           <h1>Apply faster with AI-assisted job applications</h1>
           <p>
             Build one reusable profile, upload a resume, choose a plan, generate tailored resumes and cover letters,
             and apply through supported employer integrations.
           </p>
+          <div className="hero-pills" aria-label="Apply Friend highlights">
+            <span>Verified jobs</span>
+            <span>ATS-ready PDFs</span>
+            <span>Candidate reviewed</span>
+          </div>
           <div className="button-row">
             {user ? (
               <Link className="primary-button" href="/dashboard">Go to dashboard</Link>
@@ -54,6 +59,11 @@ export default async function HomePage() {
           </p>
         </div>
         <div className="hero-preview" aria-label="Apply Friend workflow preview">
+          <div className="hive-orbit" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </div>
           <div className="preview-bar">
             <span>Profile 92%</span>
             <span>Ready for review</span>

@@ -26,7 +26,7 @@ export default function DashboardNav({ user }) {
   return (
     <aside className="sidebar">
       <Link className="brand" href="/">
-        <span className="brand-mark">A</span>
+        <span className="brand-mark">AF</span>
         <span>Apply Friend</span>
       </Link>
       <nav aria-label="Candidate navigation">
