@@ -6,7 +6,7 @@ document.querySelector("#autofill").addEventListener("click", async () => {
     statusEl.textContent = "Autofilling page...";
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     await ensureAutofillScripts(tab);
-    const response = await chrome.tabs.sendMessage(tab.id, { type: "APPLYPILOT_AUTOFILL" });
+    const response = await chrome.tabs.sendMessage(tab.id, { type: "APPLYFRIEND_AUTOFILL" });
     statusEl.textContent = response.ok ? `Filled ${response.filled} field(s). Review before submitting.` : response.error;
   } catch (error) {
     statusEl.textContent = error.message || "Autofill failed.";
@@ -16,14 +16,21 @@ document.querySelector("#autofill").addEventListener("click", async () => {
 document.querySelector("#markSubmitted").addEventListener("click", async () => {
   try {
     statusEl.textContent = "Recording assisted submission...";
-    const stored = await chrome.storage.sync.get(["applyPilotBaseUrl", "applyPilotHandoffToken"]);
-    if (!stored.applyPilotBaseUrl || !stored.applyPilotHandoffToken) {
+    const stored = await chrome.storage.sync.get([
+      "applyFriendBaseUrl",
+      "applyFriendHandoffToken",
+      "applyPilotBaseUrl",
+      "applyPilotHandoffToken"
+    ]);
+    const baseUrl = stored.applyFriendBaseUrl || stored.applyPilotBaseUrl;
+    const token = stored.applyFriendHandoffToken || stored.applyPilotHandoffToken;
+    if (!baseUrl || !token) {
       throw new Error("No prepared assisted application found. Open the job from Apply Friend first.");
     }
-    const response = await fetch(`${stored.applyPilotBaseUrl}/api/extension/mark-submitted`, {
+    const response = await fetch(`${baseUrl}/api/extension/mark-submitted`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: stored.applyPilotHandoffToken })
+      body: JSON.stringify({ token })
     });
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));

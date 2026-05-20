@@ -1,8 +1,8 @@
-if (!window.__APPLYPILOT_ASSISTED_APPLY_READY__) {
-  window.__APPLYPILOT_ASSISTED_APPLY_READY__ = true;
+if (!window.__APPLYFRIEND_ASSISTED_APPLY_READY__) {
+  window.__APPLYFRIEND_ASSISTED_APPLY_READY__ = true;
 
-  async function autofillApplyPilot(payload) {
-    const { profile, application } = payload || (await window.ApplyPilotApi.getPreparedApplication());
+  async function autofillApplyFriend(payload) {
+    const { profile, application } = payload || (await window.ApplyFriendApi.getPreparedApplication());
     const fields = [...document.querySelectorAll("input:not([type=file]), textarea, select")];
     let filled = 0;
 
@@ -10,14 +10,14 @@ if (!window.__APPLYPILOT_ASSISTED_APPLY_READY__) {
       const type = String(field.getAttribute("type") || "").toLowerCase();
       if (["button", "submit", "reset", "hidden", "password"].includes(type)) continue;
 
-      const label = window.ApplyPilotFieldMapping.labelFor(field);
-      const value = window.ApplyPilotFieldMapping.valueFor(label, profile, application);
+      const label = window.ApplyFriendFieldMapping.labelFor(field);
+      const value = window.ApplyFriendFieldMapping.valueFor(label, profile, application);
       if (!value) continue;
 
       if (type === "radio") {
-        const choiceValue = window.ApplyPilotFieldMapping.choiceValueFor(label, profile, application);
-        const optionText = window.ApplyPilotFieldMapping.optionTextFor(field);
-        if (window.ApplyPilotFieldMapping.choiceMatches(optionText || field.value, choiceValue)) {
+        const choiceValue = window.ApplyFriendFieldMapping.choiceValueFor(label, profile, application);
+        const optionText = window.ApplyFriendFieldMapping.optionTextFor(field);
+        if (window.ApplyFriendFieldMapping.choiceMatches(optionText || field.value, choiceValue)) {
           setNativeChecked(field, true);
           filled += 1;
         }
@@ -25,9 +25,9 @@ if (!window.__APPLYPILOT_ASSISTED_APPLY_READY__) {
       }
 
       if (type === "checkbox") {
-        const choiceValue = window.ApplyPilotFieldMapping.choiceValueFor(label, profile, application);
-        const optionText = window.ApplyPilotFieldMapping.optionTextFor(field);
-        if (window.ApplyPilotFieldMapping.isSafeCheckbox(label) && window.ApplyPilotFieldMapping.choiceMatches(optionText || field.value || label, choiceValue)) {
+        const choiceValue = window.ApplyFriendFieldMapping.choiceValueFor(label, profile, application);
+        const optionText = window.ApplyFriendFieldMapping.optionTextFor(field);
+        if (window.ApplyFriendFieldMapping.isSafeCheckbox(label) && window.ApplyFriendFieldMapping.choiceMatches(optionText || field.value || label, choiceValue)) {
           setNativeChecked(field, true);
           filled += 1;
         }
@@ -35,9 +35,9 @@ if (!window.__APPLYPILOT_ASSISTED_APPLY_READY__) {
       }
 
       if (field.tagName === "SELECT") {
-        const choiceValue = window.ApplyPilotFieldMapping.choiceValueFor(label, profile, application);
+        const choiceValue = window.ApplyFriendFieldMapping.choiceValueFor(label, profile, application);
         const option = [...field.options].find((item) =>
-          window.ApplyPilotFieldMapping.choiceMatches(`${item.text} ${item.value}`, choiceValue)
+          window.ApplyFriendFieldMapping.choiceMatches(`${item.text} ${item.value}`, choiceValue)
         );
         if (option) {
           field.value = option.value;
@@ -80,19 +80,19 @@ if (!window.__APPLYPILOT_ASSISTED_APPLY_READY__) {
   }
 
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message?.type !== "APPLYPILOT_AUTOFILL") return false;
-    autofillApplyPilot(message.payload)
+    if (message?.type !== "APPLYFRIEND_AUTOFILL" && message?.type !== "APPLYPILOT_AUTOFILL") return false;
+    autofillApplyFriend(message.payload)
       .then((filled) => sendResponse({ ok: true, filled }))
       .catch((error) => sendResponse({ ok: false, error: error.message }));
     return true;
   });
 
-  window.ApplyPilotApi.handoff().then((handoff) => {
+  window.ApplyFriendApi.handoff().then((handoff) => {
     if (!handoff) return;
     setTimeout(() => {
-      autofillApplyPilot()
+      autofillApplyFriend()
         .then((filled) => {
-          window.__APPLYPILOT_LAST_FILL_COUNT__ = filled;
+          window.__APPLYFRIEND_LAST_FILL_COUNT__ = filled;
         })
         .catch(() => {});
     }, 1200);

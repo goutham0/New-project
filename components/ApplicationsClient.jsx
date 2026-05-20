@@ -39,7 +39,7 @@ export default function ApplicationsClient() {
             <article className="application-row" key={application.id}>
               <div>
                 <span className={`tag ${application.applicationType === "DIRECT" ? "direct" : "assisted"}`}>
-                  {application.applicationType === "DIRECT" ? "Direct apply" : "Assisted/manual"}
+                  {applicationLabel(application.applicationType)}
                 </span>
                 <h3>{job.company || "Company not listed"}</h3>
                 <p>{job.title || application.jobId}</p>
@@ -64,6 +64,12 @@ export default function ApplicationsClient() {
       )}
     </div>
   );
+}
+
+function applicationLabel(type) {
+  if (type === "DIRECT") return "Direct apply";
+  if (type === "ASSISTED") return "Assisted apply";
+  return "Manual apply";
 }
 
 function formatDate(value) {

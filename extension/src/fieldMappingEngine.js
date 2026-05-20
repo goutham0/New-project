@@ -1,4 +1,4 @@
-window.ApplyPilotFieldMapping = {
+window.ApplyFriendFieldMapping = {
   normalize(text) {
     return String(text || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
   },
@@ -107,3 +107,5 @@ window.ApplyPilotFieldMapping = {
     return text.includes("authorized") || text.includes("citizen") || text.includes("permanent resident") || text === "yes";
   }
 };
+
+window.ApplyPilotFieldMapping = window.ApplyFriendFieldMapping;

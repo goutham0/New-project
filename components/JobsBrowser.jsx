@@ -130,6 +130,24 @@ export default function JobsBrowser({ mode }) {
     router.refresh();
   }
 
+  async function markManualSubmitted(job) {
+    setSubmitting(true);
+    setStatus("Recording manual application...");
+    const response = await fetch("/api/applications/manual", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jobId: job.id })
+    });
+    const data = await response.json();
+    setSubmitting(false);
+    if (!response.ok) {
+      setStatus(formatApiError(data, "Unable to record manual application."));
+      return;
+    }
+    setStatus(`${job.company} recorded as submitted.`);
+    router.refresh();
+  }
+
   return (
     <div>
       <div className="job-toolbar">
@@ -235,9 +253,14 @@ export default function JobsBrowser({ mode }) {
               </div>
               <div className="job-actions">
                 {isManual && (
-                  <a className="primary-button slim" href={normalizeApplyUrl(job.applyUrl)} target="_blank" rel="noopener">
-                    Open apply page
-                  </a>
+                  <>
+                    <a className="primary-button slim" href={normalizeApplyUrl(job.applyUrl)} target="_blank" rel="noopener">
+                      Open apply page
+                    </a>
+                    <button className="secondary-button slim" type="button" disabled={submitting} onClick={() => markManualSubmitted(job)}>
+                      Mark submitted
+                    </button>
+                  </>
                 )}
                 {isAssisted && (
                   <button className="primary-button slim" type="button" disabled={submitting} onClick={() => prepareAssisted(job)}>
@@ -364,6 +387,7 @@ function normalizeApplyUrl(url) {
   const value = String(url || "").trim();
   if (!value) return "https://www.adzuna.com/";
   if (/^https?:\/\//i.test(value)) return value;
+  if (value.startsWith("/")) return `${window.location.origin}${value}`;
   return `https://${value}`;
 }
 
