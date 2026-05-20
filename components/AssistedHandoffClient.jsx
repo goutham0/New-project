@@ -6,13 +6,14 @@ import { useSearchParams } from "next/navigation";
 export default function AssistedHandoffClient() {
   const searchParams = useSearchParams();
   const targetUrl = useMemo(() => safeRedirectUrl(searchParams.get("to")), [searchParams]);
+  const redirectUrl = useMemo(() => withCurrentHandoffHash(targetUrl), [targetUrl]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      window.location.replace(targetUrl);
+      window.location.replace(redirectUrl);
     }, 1800);
     return () => window.clearTimeout(timer);
-  }, [targetUrl]);
+  }, [redirectUrl]);
 
   return (
     <main className="auth-page">
@@ -22,12 +23,23 @@ export default function AssistedHandoffClient() {
         <p>
           Apply Friend is connecting your prepared application to the Chrome extension, then opening the employer page.
         </p>
-        <a className="primary-button" href={targetUrl} style={{ marginTop: 16, display: "inline-flex" }}>
+        <a className="primary-button" href={redirectUrl} style={{ marginTop: 16, display: "inline-flex" }}>
           Continue now
         </a>
       </section>
     </main>
   );
+}
+
+function withCurrentHandoffHash(targetUrl) {
+  if (typeof window === "undefined" || !window.location.hash) return targetUrl;
+  try {
+    const parsed = new URL(targetUrl);
+    parsed.hash = window.location.hash;
+    return parsed.toString();
+  } catch {
+    return targetUrl;
+  }
 }
 
 function safeRedirectUrl(value) {

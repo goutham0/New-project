@@ -39,12 +39,12 @@ export default function JobsBrowser({ mode }) {
     setDirectConsent(false);
   }
 
-  async function prepareJobIds(jobIds) {
+  async function prepareJobIds(jobIds, options = {}) {
     setStatus("Preparing application packages...");
     const response = await fetch("/api/applications/prepare", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jobIds })
+      body: JSON.stringify({ jobIds, useAi: Boolean(options.useAi) })
     });
     const data = await response.json();
     if (!response.ok) {
@@ -77,7 +77,7 @@ export default function JobsBrowser({ mode }) {
 
   async function prepareDirectReview() {
     if (!selected.length) {
-      setStatus("Select at least one direct-supported job first.");
+      setStatus("Select at least one job first.");
       return;
     }
     setPreparingDirect(true);
@@ -92,10 +92,18 @@ export default function JobsBrowser({ mode }) {
     }
     setDirectApplications(applications);
     setReviewingDirect(true);
-    setStatus("Review every generated package, download the tailored PDFs if needed, then confirm consent.");
+    setStatus("Review every prepared package. Direct-supported jobs can be submitted here; Adzuna jobs open with assisted autofill.");
   }
 
   async function submitDirectBulk() {
+    if (submitting) return;
+    const directReady = directApplications.filter((application) =>
+      application.applicationType === "DIRECT" && application.status !== "SUBMITTED" && !application.alreadySubmitted
+    );
+    if (!directReady.length) {
+      setStatus("No new direct-supported applications are ready to submit. Open assisted jobs with the extension instead.");
+      return;
+    }
     if (!directConsent) {
       setStatus("Confirm consent before direct submission.");
       return;
@@ -110,7 +118,7 @@ export default function JobsBrowser({ mode }) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        applicationIds: directApplications.map((application) => application.id),
+        applicationIds: directReady.map((application) => application.id),
         action: "submit",
         consentConfirmed: true
       })
@@ -121,13 +129,25 @@ export default function JobsBrowser({ mode }) {
       setStatus(formatApiError(data, "Unable to submit selected applications."));
       return;
     }
-    setStatus(`${data.applications.length} direct application(s) submitted.`);
+    const submittedIds = new Set((data.applications || []).filter((application) => application.status === "SUBMITTED").map((application) => application.id));
+    const submittedCount = directReady.filter((application) => submittedIds.has(application.id)).length;
+    const assistedRemaining = directApplications.filter((application) => application.applicationType === "ASSISTED");
+    setStatus(`${submittedCount} direct application(s) submitted.${assistedRemaining.length ? " Assisted jobs are ready to open with the extension." : ""}`);
     setSelected([]);
-    setDirectApplications([]);
-    setReviewingDirect(false);
+    setDirectApplications((current) => current.map((application) =>
+      submittedIds.has(application.id) ? { ...application, status: "SUBMITTED", alreadySubmitted: true } : application
+    ));
+    setReviewingDirect(Boolean(assistedRemaining.length));
     setDirectConsent(false);
-    router.push("/dashboard/applications");
+    if (!assistedRemaining.length) router.push("/dashboard/applications");
     router.refresh();
+  }
+
+  function openPreparedAssisted(application) {
+    const job = application.package?.job || {};
+    const targetUrl = withApplyFriendHandoffPage(job.applyUrl, application.handoffToken);
+    window.open(targetUrl, "_blank", "noopener");
+    setStatus("Opening assisted apply. The extension will autofill known fields, and you submit manually after review.");
   }
 
   async function markManualSubmitted(job) {
@@ -147,6 +167,14 @@ export default function JobsBrowser({ mode }) {
     setStatus(`${job.company} recorded as submitted.`);
     router.refresh();
   }
+
+  const directReadyCount = directApplications.filter((application) =>
+    application.applicationType === "DIRECT" && application.status !== "SUBMITTED" && !application.alreadySubmitted
+  ).length;
+  const assistedReadyCount = directApplications.filter((application) => application.applicationType === "ASSISTED").length;
+  const alreadySubmittedCount = directApplications.filter((application) =>
+    application.status === "SUBMITTED" || application.alreadySubmitted
+  ).length;
 
   return (
     <div>
@@ -168,7 +196,7 @@ export default function JobsBrowser({ mode }) {
           </button>
         )}
       </div>
-      {sourceStatus && mode !== "direct" && (
+      {sourceStatus && (
         <p className={`status-line ${sourceStatus.adzuna === "error" ? "error-line" : ""}`}>
           {sourceStatus.adzuna === "live" && `Live Adzuna jobs loaded${sourceStatus.adzunaCount ? ` from ${sourceStatus.adzunaCount.toLocaleString()} matching ads` : ""}.`}
           {sourceStatus.adzuna === "not_configured" && "Add ADZUNA_APP_ID and ADZUNA_APP_KEY to show live Adzuna jobs. Sample jobs are shown for now."}
@@ -177,7 +205,7 @@ export default function JobsBrowser({ mode }) {
       )}
       {isDirect && (
         <p className="status-line">
-          Select direct-supported jobs, click Apply selected, review each tailored package, then submit with consent.
+          Select jobs, review the prepared packages, submit direct-supported jobs with consent, and open Adzuna jobs through assisted autofill.
         </p>
       )}
       {isDirect && reviewingDirect && (
@@ -185,23 +213,28 @@ export default function JobsBrowser({ mode }) {
           <div className="review-panel-header">
             <div>
               <p className="eyebrow">Review generated packages</p>
-              <h3>{directApplications.length} direct application{directApplications.length === 1 ? "" : "s"} ready</h3>
-              <p>Check the resume PDF, candidate information, cover letter, and screening answers before submission.</p>
+              <h3>{directApplications.length} package{directApplications.length === 1 ? "" : "s"} ready</h3>
+              <p>
+                {directReadyCount} direct-supported, {assistedReadyCount} assisted, {alreadySubmittedCount} already submitted.
+                Check each package before continuing.
+              </p>
             </div>
-            <span className="tag direct">Needs candidate approval</span>
+            <span className="tag direct">Candidate review required</span>
           </div>
           <div className="bulk-review-grid">
             {directApplications.map((application) => (
-              <DirectApplicationReview key={application.id} application={application} />
+              <DirectApplicationReview key={application.id} application={application} onOpenAssisted={openPreparedAssisted} />
             ))}
           </div>
-          <label className="consent-row">
-            <input type="checkbox" checked={directConsent} onChange={(event) => setDirectConsent(event.target.checked)} />
-            <span>I reviewed the selected jobs and authorize Apply Friend to submit these applications through supported employer or ATS integrations.</span>
-          </label>
+          {directReadyCount > 0 && (
+            <label className="consent-row">
+              <input type="checkbox" checked={directConsent} onChange={(event) => setDirectConsent(event.target.checked)} />
+              <span>I reviewed the direct-supported jobs and authorize Apply Friend to submit them through supported employer or ATS integrations.</span>
+            </label>
+          )}
           <div className="button-row compact">
-            <button className="primary-button" type="button" disabled={!directConsent || submitting} onClick={submitDirectBulk}>
-              {submitting ? "Submitting..." : "Submit selected"}
+            <button className="primary-button" type="button" disabled={directReadyCount === 0 || !directConsent || submitting} onClick={submitDirectBulk}>
+              {submitting ? "Submitting..." : `Submit direct jobs${directReadyCount ? ` (${directReadyCount})` : ""}`}
             </button>
             <button
               className="secondary-button"
@@ -243,8 +276,8 @@ export default function JobsBrowser({ mode }) {
               <p>{job.company} - {job.location}</p>
               <p>{job.description}</p>
               <div className="tag-row">
-                <span className={`tag ${job.directApplySupported ? "direct" : isAssisted ? "assisted" : ""}`}>
-                  {job.directApplySupported ? "Direct API supported" : isAssisted ? "Extension assisted" : "Manual link"}
+                <span className={`tag ${job.directApplySupported ? "direct" : job.applyType === "assisted" ? "assisted" : ""}`}>
+                  {job.directApplySupported ? "Direct API supported" : job.applyType === "assisted" ? "Extension assisted" : "Manual link"}
                 </span>
                 <span className="tag">{job.remoteType}</span>
                 <span className="tag">{job.employmentType}</span>
@@ -274,7 +307,7 @@ export default function JobsBrowser({ mode }) {
                 )}
               </div>
             </div>
-            <strong className="score">{job.directApplySupported ? "API" : "Link"}</strong>
+            <strong className="score">{job.directApplySupported ? "API" : job.applyType === "assisted" ? "Assist" : "Link"}</strong>
           </article>
         ))}
         {!loading && !jobs.length && (
@@ -288,19 +321,23 @@ export default function JobsBrowser({ mode }) {
   );
 }
 
-function DirectApplicationReview({ application }) {
+function DirectApplicationReview({ application, onOpenAssisted }) {
   const pkg = application.package || {};
   const job = pkg.job || {};
   const resume = pkg.tailoredResume || {};
   const submission = pkg.candidateSubmission || {};
   const pdfHref = pkg.tailoredResumePdfBase64 ? `data:application/pdf;base64,${pkg.tailoredResumePdfBase64}` : "";
   const jobMeta = [job.company, job.location].filter(Boolean).join(" - ");
+  const isAssisted = application.applicationType === "ASSISTED";
+  const isSubmitted = application.status === "SUBMITTED" || application.alreadySubmitted;
 
   return (
     <article className="application-review-card">
       <div className="review-card-title">
         <div>
-          <span className="tag direct">{job.source || "Supported API"}</span>
+          <span className={`tag ${isAssisted ? "assisted" : "direct"}`}>
+            {isSubmitted ? "Already submitted" : isAssisted ? "Assisted apply" : "Direct API"}
+          </span>
           <h4>{job.title || application.jobId}</h4>
           {jobMeta && <p>{jobMeta}</p>}
         </div>
@@ -322,6 +359,11 @@ function DirectApplicationReview({ application }) {
           <a className="secondary-button slim" href={pdfHref} download={pkg.tailoredResumePdfFileName || "tailored-resume.pdf"}>
             Download tailored PDF
           </a>
+        )}
+        {isAssisted && (
+          <button className="primary-button slim" type="button" onClick={() => onOpenAssisted(application)}>
+            Open assisted form
+          </button>
         )}
       </section>
 

@@ -12,19 +12,17 @@ export async function GET(request) {
   const jobs = [...filterSampleJobs({ mode, query })];
   const sourceStatus = { adzuna: "skipped" };
 
-  if (mode !== "direct") {
-    try {
-      const adzuna = await fetchAdzunaJobs({ mode, query, where, page });
-      if (adzuna.jobs.length) {
-        await saveCachedJobs(adzuna.jobs);
-        jobs.push(...adzuna.jobs);
-      }
-      sourceStatus.adzuna = adzuna.status;
-      sourceStatus.adzunaCount = adzuna.count;
-    } catch (error) {
-      sourceStatus.adzuna = "error";
-      sourceStatus.message = error.message;
+  try {
+    const adzuna = await fetchAdzunaJobs({ mode, query, where, page });
+    if (adzuna.jobs.length) {
+      await saveCachedJobs(adzuna.jobs);
+      jobs.push(...adzuna.jobs);
     }
+    sourceStatus.adzuna = adzuna.status;
+    sourceStatus.adzunaCount = adzuna.count;
+  } catch (error) {
+    sourceStatus.adzuna = "error";
+    sourceStatus.message = error.message;
   }
 
   return NextResponse.json({ jobs, sourceStatus });

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { createAssistedApplyToken } from "@/lib/auth";
-import { getProfile, getLatestResume, createApplication, addAudit } from "@/lib/store";
+import { getProfile, getLatestResume, listApplications, createApplication, addAudit } from "@/lib/store";
 import { getJobById } from "@/lib/jobs";
 import { generateApplicationPackage } from "@/lib/ai";
 import { generateTailoredResume } from "@/lib/openaiResume";
@@ -35,7 +35,8 @@ export async function POST(request) {
     return NextResponse.json({ error: "Paid plan required for application preparation." }, { status: 402 });
   }
 
-  const { jobIds = [] } = await request.json();
+  const { jobIds = [], useAi = false } = await request.json();
+  const uniqueJobIds = [...new Set(Array.isArray(jobIds) ? jobIds : [])];
   const profile = await getProfile(user.id);
   const resume = await getLatestResume(user.id);
   const missing = requiredFields.filter((field) => !String(profile[field] || "").trim());
@@ -44,13 +45,25 @@ export async function POST(request) {
   }
 
   const applications = [];
-  for (const jobId of jobIds) {
+  const existingApplications = await listApplications(user.id);
+  for (const jobId of uniqueJobIds) {
     const job = await getJobById(jobId);
     if (!job) continue;
     if (job.applyType === "manual") continue;
+
+    const existing = existingApplications.find((item) => item.jobId === job.id);
+    if (existing) {
+      applications.push(withAssistedHandoff(user, {
+        ...existing,
+        alreadyPrepared: true,
+        alreadySubmitted: existing.status === "SUBMITTED"
+      }));
+      continue;
+    }
+
     let pkg;
     try {
-      pkg = await buildPreparedPackage({ profile, resumeText: resume.content, job });
+      pkg = await buildPreparedPackage({ profile, resumeText: resume.content, job, useAi });
     } catch (error) {
       console.error("buildPreparedPackage error:", error);
       await addAudit({
@@ -84,13 +97,7 @@ export async function POST(request) {
         }
       }
     });
-    if (application.applicationType === "ASSISTED") {
-      application = {
-        ...application,
-        handoffToken: createAssistedApplyToken(user, application)
-      };
-    }
-    applications.push(application);
+    applications.push(withAssistedHandoff(user, application));
   }
 
   await addAudit({
@@ -101,7 +108,15 @@ export async function POST(request) {
   return NextResponse.json({ applications });
 }
 
-async function buildPreparedPackage({ profile, resumeText, job }) {
+function withAssistedHandoff(user, application) {
+  if (application.applicationType !== "ASSISTED") return application;
+  return {
+    ...application,
+    handoffToken: createAssistedApplyToken(user, application)
+  };
+}
+
+async function buildPreparedPackage({ profile, resumeText, job, useAi }) {
   const fallback = generateApplicationPackage({ profile, resumeText, job });
   let tailored;
   try {
@@ -109,7 +124,8 @@ async function buildPreparedPackage({ profile, resumeText, job }) {
       resumeText,
       jobDescription: buildJobDescription(job),
       profile,
-      requireAi: true
+      requireAi: Boolean(useAi),
+      skipAi: !useAi
     });
   } catch (error) {
     console.warn("generateTailoredResume failed, using local fallback:", error.message);
@@ -117,7 +133,8 @@ async function buildPreparedPackage({ profile, resumeText, job }) {
       resumeText,
       jobDescription: buildJobDescription(job),
       profile,
-      requireAi: false
+      requireAi: false,
+      skipAi: true
     });
   }
   const pdf = createResumePdf(tailored);

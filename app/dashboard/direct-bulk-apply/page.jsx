@@ -5,9 +5,9 @@ export default function DirectBulkApplyPage() {
     <>
       <div className="dashboard-header">
         <div className="dashboard-title">
-          <p className="eyebrow">Direct bulk apply</p>
-          <h1>API-supported jobs</h1>
-          <p>Select supported jobs, click Apply selected, review each tailored resume PDF and application detail, then submit after consent. Adzuna redirect jobs stay in Manual and Assisted Apply.</p>
+          <p className="eyebrow">Bulk apply</p>
+          <h1>Review and apply selected jobs</h1>
+          <p>Select live API jobs, review the prepared package, then submit direct-supported jobs with consent. Adzuna jobs open as assisted apply because they are redirect listings, not ATS submission APIs.</p>
         </div>
       </div>
       <JobsBrowser mode="direct" />

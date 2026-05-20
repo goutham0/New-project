@@ -12,10 +12,21 @@ export async function POST(request) {
   }
   const existing = await listApplications(user.id);
   const updated = [];
+  const skipped = [];
 
   for (const applicationId of applicationIds) {
     const application = existing.find((item) => item.id === applicationId);
     if (!application) continue;
+
+    if (application.status === "SUBMITTED") {
+      skipped.push({
+        id: application.id,
+        jobId: application.jobId,
+        reason: "already_submitted"
+      });
+      updated.push(application);
+      continue;
+    }
 
     if (action === "approve") {
       updated.push(await updateApplication(user.id, applicationId, { status: "APPROVED" }));
@@ -41,6 +52,15 @@ export async function POST(request) {
       return NextResponse.json({ error: "Candidate consent is required before direct submission." }, { status: 400 });
     }
 
+    if (action === "submit" && application.applicationType !== "DIRECT") {
+      skipped.push({
+        id: application.id,
+        jobId: application.jobId,
+        reason: "assisted_requires_manual_submit"
+      });
+      continue;
+    }
+
     updated.push(
       await updateApplication(user.id, applicationId, {
         status: "SUBMITTED",
@@ -56,11 +76,11 @@ export async function POST(request) {
     userId: user.id,
     eventType: "APPLICATION_STATUS_UPDATED",
     message: `${updated.length} application(s) updated with action ${action}.`,
-    metadata: { action }
+    metadata: { action, skipped }
   });
   const applications = updated.filter(Boolean);
   if (!applications.length) {
     return NextResponse.json({ error: "No matching applications were found to update." }, { status: 404 });
   }
-  return NextResponse.json({ applications });
+  return NextResponse.json({ applications, skipped });
 }

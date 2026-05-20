@@ -89,12 +89,12 @@ if (!window.__APPLYFRIEND_ASSISTED_APPLY_READY__) {
 
   window.ApplyFriendApi.handoff().then((handoff) => {
     if (!handoff) return;
-    setTimeout(() => {
+    [900, 2200, 4500, 7500].forEach((delay) => setTimeout(() => {
       autofillApplyFriend()
         .then((filled) => {
-          window.__APPLYFRIEND_LAST_FILL_COUNT__ = filled;
+          window.__APPLYFRIEND_LAST_FILL_COUNT__ = Math.max(window.__APPLYFRIEND_LAST_FILL_COUNT__ || 0, filled);
         })
         .catch(() => {});
-    }, 1200);
+    }, delay));
   });
 }

@@ -44,17 +44,31 @@ window.ApplyFriendFieldMapping = {
     if (text.includes("country")) return profile.country;
     if (text.includes("current company")) return profile.currentCompany;
     if (text.includes("current title") || text.includes("job title")) return profile.currentTitle;
+    if (text.includes("years") && text.includes("experience")) return profile.yearsExperience;
+    if (text.includes("highest education") || text.includes("education level")) return profile.highestEducation;
+    if (text.includes("university") || text.includes("school") || text.includes("college")) return profile.university;
+    if (text.includes("degree")) return profile.degree || profile.highestEducation;
+    if (text.includes("graduation")) return profile.graduationYear;
+    if (text.includes("preferred location")) return profile.preferredLocations;
+    if (text.includes("remote") || text.includes("hybrid") || text.includes("onsite")) return profile.remotePreference;
     if (text.includes("salary")) return [profile.expectedSalaryMin, profile.expectedSalaryMax].filter(Boolean).join(" - ");
     if (text.includes("notice")) return profile.noticePeriod;
     if (text.includes("sponsor")) return profile.sponsorshipRequired;
     if (text.includes("authorized") || text.includes("authorization")) return profile.workAuthorization;
-    if (text.includes("cover letter")) return coverLetter;
+    if (text.includes("cover letter") || text.includes("additional information") || text.includes("anything else")) return coverLetter;
 
     const matchingAnswer = answers.find((answer) => {
       const question = this.normalize(answer.question);
       return question && this.questionMatches(text, question);
     });
-    return matchingAnswer?.answer || "";
+    if (matchingAnswer?.answer) return matchingAnswer.answer;
+    if ((text.includes("why") && (text.includes("role") || text.includes("company") || text.includes("interested"))) || text.includes("why are you a fit")) {
+      return answers[0]?.answer || coverLetter;
+    }
+    if (text.includes("tell us about yourself") || text.includes("summary")) {
+      return application?.package?.tailoredResume?.summary || answers[0]?.answer || "";
+    }
+    return "";
   },
 
   choiceValueFor(label, profile, application) {
@@ -63,6 +77,8 @@ window.ApplyFriendFieldMapping = {
     if (text.includes("authorized") || text.includes("authorization") || text.includes("work in")) {
       return this.isAuthorized(profile.workAuthorization) ? "yes" : this.yesNo(profile.workAuthorization);
     }
+    if (text.includes("remote") || text.includes("hybrid") || text.includes("onsite")) return profile.remotePreference;
+    if (text.includes("relocate")) return this.yesNo(profile.willingToRelocate);
     return this.valueFor(label, profile, application);
   },
 

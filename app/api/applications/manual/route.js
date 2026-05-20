@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
-import { createApplication, addAudit } from "@/lib/store";
+import { listApplications, createApplication, addAudit } from "@/lib/store";
 import { getJobById } from "@/lib/jobs";
 
 export async function POST(request) {
@@ -11,6 +11,11 @@ export async function POST(request) {
   const job = await getJobById(jobId);
   if (!job) {
     return NextResponse.json({ error: "Job was not found." }, { status: 404 });
+  }
+
+  const existing = (await listApplications(user.id)).find((application) => application.jobId === job.id && application.status === "SUBMITTED");
+  if (existing) {
+    return NextResponse.json({ application: existing, alreadySubmitted: true });
   }
 
   const application = await createApplication({

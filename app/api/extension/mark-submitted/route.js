@@ -20,6 +20,10 @@ export async function POST(request) {
     return NextResponse.json({ error: "Prepared assisted application was not found." }, { status: 404 });
   }
 
+  if (application.status === "SUBMITTED") {
+    return NextResponse.json({ application });
+  }
+
   const updated = await updateApplication(handoff.user.id, application.id, {
     status: "SUBMITTED",
     externalApplicationId: `ASSISTED-${Math.floor(Math.random() * 900000 + 100000)}`
