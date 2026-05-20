@@ -966,6 +966,19 @@ p {
   white-space: pre-wrap;
 }
 
+.resume-output-textarea {
+  min-height: 520px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px;
+  background: #ffffff;
+  color: var(--ink);
+  font: 13px/1.55 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  resize: vertical;
+  white-space: pre-wrap;
+}
+
 .answer-list {
   display: grid;
   gap: 10px;

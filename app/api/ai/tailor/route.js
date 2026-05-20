@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { getProfile, getLatestResume, addAudit } from "@/lib/store";
 import { extractResumeText } from "@/lib/resumeText";
-import { createResumePdf } from "@/lib/pdf";
+import { createResumePdf, resumeToPlainText } from "@/lib/pdf";
 import { generateTailoredResume } from "@/lib/openaiResume";
 
 export async function POST(request) {
@@ -66,6 +66,7 @@ export async function POST(request) {
   });
   return NextResponse.json({
     result,
+    resumeTextOutput: resumeToPlainText(result),
     pdfBase64: pdf.toString("base64"),
     fileName: `${safeFilePart(result.candidateName || "candidate")}-tailored-resume.pdf`
   });

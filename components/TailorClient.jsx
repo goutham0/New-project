@@ -7,6 +7,7 @@ export default function TailorClient({ savedResumeName = "" }) {
   const [resumeText, setResumeText] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [result, setResult] = useState(null);
+  const [resumeOutputText, setResumeOutputText] = useState("");
   const [atsResult, setAtsResult] = useState(null);
   const [pdfUrl, setPdfUrl] = useState("");
   const [pdfName, setPdfName] = useState("tailored-resume.pdf");
@@ -21,6 +22,7 @@ export default function TailorClient({ savedResumeName = "" }) {
     setBusy(true);
     setStatus("Generating tailored resume PDF...");
     setResult(null);
+    setResumeOutputText("");
     revokePdf();
 
     const formData = new FormData();
@@ -45,6 +47,7 @@ export default function TailorClient({ savedResumeName = "" }) {
     }
 
     setResult(data.result);
+    setResumeOutputText(data.resumeTextOutput || "");
     setPdfName(data.fileName || "tailored-resume.pdf");
     setPdfUrl(base64PdfToUrl(data.pdfBase64));
     setStatus("High-standard GPT resume PDF generated in Apply Friend format.");
@@ -155,9 +158,22 @@ export default function TailorClient({ savedResumeName = "" }) {
                 </ul>
               </section>
               {pdfUrl && (
-                <a className="primary-button" href={pdfUrl} download={pdfName}>
-                  Download tailored PDF
-                </a>
+                <div className="button-row compact">
+                  <a className="primary-button" href={pdfUrl} download={pdfName}>
+                    Download tailored PDF
+                  </a>
+                  {resumeOutputText && (
+                    <button className="secondary-button" type="button" onClick={() => navigator.clipboard?.writeText(resumeOutputText)}>
+                      Copy Word text
+                    </button>
+                  )}
+                </div>
+              )}
+              {resumeOutputText && (
+                <section>
+                  <h4>Full resume content</h4>
+                  <textarea className="resume-output-textarea" value={resumeOutputText} readOnly />
+                </section>
               )}
               {result.warning && <p className="status-line error-line">{result.warning}</p>}
             </div>
