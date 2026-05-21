@@ -50,7 +50,10 @@ export default function TailorClient({ savedResumeName = "" }) {
     setResumeOutputText(data.resumeTextOutput || "");
     setPdfName(data.fileName || "tailored-resume.pdf");
     setPdfUrl(base64PdfToUrl(data.pdfBase64));
-    setStatus("High-standard GPT resume PDF generated in Apply Friend format.");
+    setStatus(data.result?.aiUsed
+      ? "High-standard GPT resume PDF generated in Apply Friend format."
+      : "Resume PDF generated with source-backed local repair. Review the warning below before using it."
+    );
   }
 
   async function scoreAts(event) {
@@ -81,7 +84,7 @@ export default function TailorClient({ savedResumeName = "" }) {
     }
 
     setAtsResult(data.result);
-    setAtsStatus("GPT ATS score generated.");
+    setAtsStatus(data.result?.aiUsed ? "GPT ATS score generated." : "ATS score generated with local keyword analysis. Review the warning below.");
   }
 
   function revokePdf() {

@@ -42,7 +42,7 @@ export async function POST(request) {
   const profile = await getProfile(user.id);
   let result;
   try {
-    result = await generateTailoredResume({ resumeText, jobDescription, profile, requireAi: true });
+    result = await generateTailoredResume({ resumeText, jobDescription, profile, requireAi: false });
   } catch (error) {
     await addAudit({
       userId: user.id,
@@ -62,7 +62,7 @@ export async function POST(request) {
     userId: user.id,
     eventType: "TAILORED_RESUME_PDF_CREATED",
     message: "Tailored resume PDF generated.",
-    metadata: { aiUsed: result.aiUsed }
+    metadata: { aiUsed: result.aiUsed, warning: result.warning || "" }
   });
   return NextResponse.json({
     result,

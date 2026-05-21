@@ -30,7 +30,7 @@ export async function POST(request) {
 
   let result;
   try {
-    result = await scoreResumeForAts({ resumeText, jobDescription, requireAi: true });
+    result = await scoreResumeForAts({ resumeText, jobDescription, requireAi: false });
   } catch (error) {
     await addAudit({
       userId: user.id,
@@ -48,7 +48,7 @@ export async function POST(request) {
     userId: user.id,
     eventType: "ATS_SCORE_GENERATED",
     message: "ATS resume score generated.",
-    metadata: { aiUsed: result.aiUsed, overallScore: result.overallScore }
+    metadata: { aiUsed: result.aiUsed, overallScore: result.overallScore, warning: result.warning || "" }
   });
 
   return NextResponse.json({ result });
