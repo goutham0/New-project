@@ -4,10 +4,15 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const links = [
-  ["about", "About"],
+  ["home", "Home"],
+  ["features", "Features"],
   ["how", "How it works"],
   ["pricing", "Pricing"],
-  ["apply-modes", "Apply modes"]
+  ["testimonials", "Testimonials"],
+  ["about", "About"],
+  ["feedback", "Feedback"],
+  ["settings", "Settings"],
+  ["faq", "FAQ"]
 ];
 
 export default function PublicNav({ isAuthenticated = false }) {
@@ -74,7 +79,7 @@ export default function PublicNav({ isAuthenticated = false }) {
         ) : (
           <>
             <Link className="secondary-button" href="/login" onClick={() => setMenuOpen(false)}>Login</Link>
-            <Link className="primary-button" href="/signup" onClick={() => setMenuOpen(false)}>Signup</Link>
+            <Link className="primary-button" href="/signup" onClick={() => setMenuOpen(false)}>Get Started</Link>
           </>
         )}
       </div>

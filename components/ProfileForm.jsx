@@ -36,7 +36,7 @@ const blankProfile = {
 export default function ProfileForm({ initialProfile, initialUser, initialResume }) {
   const router = useRouter();
   const [profile, setProfile] = useState({ ...blankProfile, ...initialProfile });
-  const [plan, setPlan] = useState(initialUser.plan || "Free");
+  const [plan, setPlan] = useState(initialUser.plan && initialUser.plan !== "Free" ? initialUser.plan : "ApplyFriend Pro");
   const [resume, setResume] = useState(initialResume);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -84,9 +84,9 @@ export default function ProfileForm({ initialProfile, initialUser, initialResume
     <div className="dashboard-grid">
       <article className="dashboard-card">
         <h3>Plan selection</h3>
-        <p>Select a paid plan to unlock assisted apply, direct bulk apply, and tailoring workflows.</p>
+        <p>Select the ApplyFriend plan that matches the level of AI, bulk apply, and recruiter support you want.</p>
         <div className="button-row">
-          {["Free", "Pro", "Premium"].map((item) => (
+          {["ApplyFriend Pro", "ApplyFriend Elite", "ApplyFriend Concierge"].map((item) => (
             <button
               className={plan === item ? "primary-button" : "secondary-button"}
               type="button"

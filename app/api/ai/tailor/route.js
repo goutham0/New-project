@@ -4,6 +4,7 @@ import { getProfile, getLatestResume, addAudit } from "@/lib/store";
 import { extractResumeText } from "@/lib/resumeText";
 import { createResumePdf, resumeToPlainText } from "@/lib/pdf";
 import { generateTailoredResume } from "@/lib/openaiResume";
+import { createResumeDocx } from "@/lib/docxResume";
 
 export async function POST(request) {
   const user = await currentUser();
@@ -58,6 +59,7 @@ export async function POST(request) {
   }
 
   const pdf = createResumePdf(result);
+  const docx = await createResumeDocx(result);
   await addAudit({
     userId: user.id,
     eventType: "TAILORED_RESUME_PDF_CREATED",
@@ -68,7 +70,9 @@ export async function POST(request) {
     result,
     resumeTextOutput: resumeToPlainText(result),
     pdfBase64: pdf.toString("base64"),
-    fileName: `${safeFilePart(result.candidateName || "candidate")}-tailored-resume.pdf`
+    docxBase64: docx.toString("base64"),
+    fileName: `${safeFilePart(result.candidateName || "candidate")}-tailored-resume.pdf`,
+    docxFileName: `${safeFilePart(result.candidateName || "candidate")}-tailored-resume.docx`
   });
 }
 

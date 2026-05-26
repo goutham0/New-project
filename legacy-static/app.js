@@ -1,4 +1,4 @@
-const STORAGE_KEY = "applypilot-demo-state-v2";
+const STORAGE_KEY = "applyfriend-demo-state-v3";
 
 const jobs = [
   {
@@ -94,26 +94,26 @@ const jobs = [
 ];
 
 const planRules = {
-  Free: {
-    quota: "Manual only",
-    canPrepare: false,
-    directLimit: 0,
-    aiLimit: 0,
-    packageText: "Free candidates can save jobs and open official apply links. AI tailoring, assisted apply, and direct apply unlock on paid plans."
-  },
   Pro: {
-    quota: "12 monthly",
+    quota: "$49.99 per month",
     canPrepare: true,
     directLimit: 12,
     aiLimit: 30,
-    packageText: "Pro includes tailored resumes, cover letters, screening answers, assisted apply, and a limited direct apply quota."
+    packageText: "Pro includes AI-tailored resumes, ATS keyword matching, cover letters, assisted apply, extension autofill, job tracking, basic AI job recommendations, and standard support."
   },
-  Premium: {
-    quota: "40 monthly",
+  Elite: {
+    quota: "$99.99 per month",
     canPrepare: true,
     directLimit: 40,
-    aiLimit: 100,
-    packageText: "Premium increases monthly quotas, unlocks advanced tracking, and adds priority support."
+    aiLimit: 999,
+    packageText: "Elite adds bulk apply up to 40 jobs per day, unlimited AI-tailored resumes, smart duplicate-job detection, advanced matching filters, analytics, and priority support."
+  },
+  Concierge: {
+    quota: "$199.99 per month",
+    canPrepare: true,
+    directLimit: 40,
+    aiLimit: 999,
+    packageText: "Concierge adds a dedicated recruiter/job assistant, human-reviewed resume optimization, personalized job targeting, interview preparation, mock interview support, follow-up guidance, and VIP support."
   }
 };
 
@@ -204,7 +204,7 @@ const planSummary = document.querySelector("#plan-summary");
 function createDefaultState() {
   return {
     user: null,
-    plan: "Free",
+    plan: "Pro",
     resume: null,
     profile: { ...defaultProfile },
     selectedJobs: [],
@@ -285,9 +285,9 @@ function readinessItems() {
       detail: profileComplete() ? "Required application fields saved" : "Fill the profile form"
     },
     {
-      label: "Paid plan active",
-      done: state.plan !== "Free",
-      detail: state.plan === "Free" ? "Direct and assisted apply are locked" : `${state.plan} plan active`
+      label: "Plan selected",
+      done: Boolean(planRules[state.plan]),
+      detail: planRules[state.plan] ? `${state.plan} plan active` : "Choose Pro, Elite, or Concierge"
     }
   ];
 }
@@ -552,7 +552,7 @@ function openModal(mode) {
   currentAuthMode = mode;
   const isLogin = mode === "login";
   modalMode.textContent = isLogin ? "Welcome back" : "Candidate access";
-  modalTitle.textContent = isLogin ? "Login to ApplyPilot" : "Create your ApplyPilot account";
+  modalTitle.textContent = isLogin ? "Login to ApplyFriend" : "Create your ApplyFriend account";
   authModal.hidden = false;
   document.body.classList.add("modal-open");
   authModal.querySelector("input").focus();
@@ -626,7 +626,7 @@ function openEmployerJob(jobId) {
   addAudit(`Employer apply link opened for ${job.title} at ${job.company}.`);
   packagePreview.innerHTML = `
     <p><strong>${escapeHtml(job.company)} apply link opened.</strong></p>
-    <p>Manual apply records a click or open event only. Direct submission still requires paid plan, review, and consent.</p>
+    <p>Manual apply records a click or open event only. Direct submission still requires review and consent.</p>
   `;
 }
 

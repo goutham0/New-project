@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { fetchAdzunaJobs } from "@/lib/adzuna";
 import { filterSampleJobs } from "@/lib/jobs";
 import { saveCachedJobs } from "@/lib/store";
+import { dedupeJobs } from "@/lib/jobDedupe";
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -25,5 +26,7 @@ export async function GET(request) {
     sourceStatus.message = error.message;
   }
 
-  return NextResponse.json({ jobs, sourceStatus });
+  const dedupedJobs = dedupeJobs(jobs);
+  sourceStatus.deduped = jobs.length - dedupedJobs.length;
+  return NextResponse.json({ jobs: dedupedJobs, sourceStatus });
 }

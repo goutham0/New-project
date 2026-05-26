@@ -123,5 +123,3 @@ window.ApplyFriendFieldMapping = {
     return text.includes("authorized") || text.includes("citizen") || text.includes("permanent resident") || text === "yes";
   }
 };
-
-window.ApplyPilotFieldMapping = window.ApplyFriendFieldMapping;

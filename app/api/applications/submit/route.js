@@ -52,6 +52,14 @@ export async function POST(request) {
       return NextResponse.json({ error: "Candidate consent is required before direct submission." }, { status: 400 });
     }
 
+    if (
+      action === "submit" &&
+      application.applicationType === "DIRECT" &&
+      !["NEEDS_REVIEW", "APPROVED"].includes(application.status)
+    ) {
+      return NextResponse.json({ error: "Application requires candidate review before direct submission." }, { status: 409 });
+    }
+
     if (action === "submit" && application.applicationType !== "DIRECT") {
       skipped.push({
         id: application.id,

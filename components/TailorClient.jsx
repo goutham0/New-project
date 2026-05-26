@@ -10,7 +10,9 @@ export default function TailorClient({ savedResumeName = "" }) {
   const [resumeOutputText, setResumeOutputText] = useState("");
   const [atsResult, setAtsResult] = useState(null);
   const [pdfUrl, setPdfUrl] = useState("");
+  const [docxUrl, setDocxUrl] = useState("");
   const [pdfName, setPdfName] = useState("tailored-resume.pdf");
+  const [docxName, setDocxName] = useState("tailored-resume.docx");
   const [status, setStatus] = useState("");
   const [atsStatus, setAtsStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -49,10 +51,12 @@ export default function TailorClient({ savedResumeName = "" }) {
     setResult(data.result);
     setResumeOutputText(data.resumeTextOutput || "");
     setPdfName(data.fileName || "tailored-resume.pdf");
+    setDocxName(data.docxFileName || "tailored-resume.docx");
     setPdfUrl(base64PdfToUrl(data.pdfBase64));
+    setDocxUrl(base64ToUrl(data.docxBase64, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"));
     setStatus(data.result?.aiUsed
-      ? "High-standard GPT resume PDF generated in Apply Friend format."
-      : "Resume PDF generated with source-backed local repair. Review the warning below before using it."
+      ? "High-standard GPT resume DOCX and PDF generated in Apply Friend format."
+      : "Resume DOCX and PDF generated with source-backed local repair. Review the warning below before using it."
     );
   }
 
@@ -89,15 +93,17 @@ export default function TailorClient({ savedResumeName = "" }) {
 
   function revokePdf() {
     if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    if (docxUrl) URL.revokeObjectURL(docxUrl);
     setPdfUrl("");
+    setDocxUrl("");
   }
 
   return (
     <div className="dashboard-grid">
       <form className="form-grid dashboard-card" onSubmit={generateTailoredResume}>
         <div>
-          <h3>Generate tailored resume PDF</h3>
-          <p>{savedResumeName ? `Using saved profile resume: ${savedResumeName}` : "Upload a resume, paste the JD, and download a clean ATS-friendly PDF."}</p>
+          <h3>Generate tailored resume</h3>
+          <p>{savedResumeName ? `Using saved profile resume: ${savedResumeName}` : "Upload a resume, paste the JD, and download a clean ATS-friendly DOCX/PDF."}</p>
         </div>
         <label>
           <span>Resume upload</span>
@@ -126,7 +132,7 @@ export default function TailorClient({ savedResumeName = "" }) {
         </label>
         <div className="button-row compact">
           <button className="primary-button" type="submit" disabled={busy || !hasResumeInput}>
-            {busy ? "Generating..." : "Generate PDF"}
+            {busy ? "Generating..." : "Generate resume"}
           </button>
           <button className="secondary-button" type="button" disabled={atsBusy || !hasResumeInput} onClick={scoreAts}>
             {atsBusy ? "Scoring..." : "Get ATS score"}
@@ -139,7 +145,7 @@ export default function TailorClient({ savedResumeName = "" }) {
       <div className="dashboard-grid two">
         <article className="dashboard-card">
           <h3>Tailored resume output</h3>
-          {!result && <p>Generate a resume PDF to preview the rewritten sections and download the file.</p>}
+          {!result && <p>Generate a resume to preview the rewritten sections and download DOCX/PDF files.</p>}
           {result && (
             <div className="dashboard-grid">
               <section>
@@ -162,8 +168,13 @@ export default function TailorClient({ savedResumeName = "" }) {
               </section>
               {pdfUrl && (
                 <div className="button-row compact">
+                  {docxUrl && (
+                    <a className="primary-button" href={docxUrl} download={docxName}>
+                      Download DOCX
+                    </a>
+                  )}
                   <a className="primary-button" href={pdfUrl} download={pdfName}>
-                    Download tailored PDF
+                    Download PDF
                   </a>
                   {resumeOutputText && (
                     <button className="secondary-button" type="button" onClick={() => navigator.clipboard?.writeText(resumeOutputText)}>
@@ -243,10 +254,15 @@ function ListBlock({ title, items = [] }) {
 }
 
 function base64PdfToUrl(base64) {
+  return base64ToUrl(base64, "application/pdf");
+}
+
+function base64ToUrl(base64, contentType) {
+  if (!base64) return "";
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let index = 0; index < binary.length; index += 1) {
     bytes[index] = binary.charCodeAt(index);
   }
-  return URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+  return URL.createObjectURL(new Blob([bytes], { type: contentType }));
 }

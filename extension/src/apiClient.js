@@ -1,8 +1,8 @@
 window.ApplyFriendApi = {
   handoffFromLocation() {
     const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-    const token = params.get("applyfriend_token") || params.get("applypilot_token");
-    const baseUrl = params.get("applyfriend_base") || params.get("applypilot_base");
+    const token = params.get("applyfriend_token");
+    const baseUrl = params.get("applyfriend_base");
     return token && baseUrl ? { token, baseUrl } : null;
   },
 
@@ -11,20 +11,16 @@ window.ApplyFriendApi = {
     if (fromLocation) {
       await chrome.storage.sync.set({
         applyFriendHandoffToken: fromLocation.token,
-        applyFriendBaseUrl: fromLocation.baseUrl,
-        applyPilotHandoffToken: fromLocation.token,
-        applyPilotBaseUrl: fromLocation.baseUrl
+        applyFriendBaseUrl: fromLocation.baseUrl
       });
       return fromLocation;
     }
     const stored = await chrome.storage.sync.get([
       "applyFriendBaseUrl",
-      "applyFriendHandoffToken",
-      "applyPilotBaseUrl",
-      "applyPilotHandoffToken"
+      "applyFriendHandoffToken"
     ]);
-    const baseUrl = stored.applyFriendBaseUrl || stored.applyPilotBaseUrl;
-    const token = stored.applyFriendHandoffToken || stored.applyPilotHandoffToken;
+    const baseUrl = stored.applyFriendBaseUrl;
+    const token = stored.applyFriendHandoffToken;
     return baseUrl && token
       ? { baseUrl, token }
       : null;
@@ -43,5 +39,3 @@ window.ApplyFriendApi = {
     return response.json();
   }
 };
-
-window.ApplyPilotApi = window.ApplyFriendApi;

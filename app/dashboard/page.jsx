@@ -55,7 +55,7 @@ export default async function DashboardPage() {
         <article className="stat-card">
           <p className="panel-kicker">Plan</p>
           <h3>{user.plan}</h3>
-          <p>Free users can manually apply. Paid users can prepare AI packages.</p>
+          <p>Upgrade to Pro, Elite, or Concierge to unlock AI preparation and assisted workflows.</p>
         </article>
         <article className="stat-card">
           <p className="panel-kicker">Resume</p>

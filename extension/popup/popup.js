@@ -18,12 +18,10 @@ document.querySelector("#markSubmitted").addEventListener("click", async () => {
     statusEl.textContent = "Recording assisted submission...";
     const stored = await chrome.storage.sync.get([
       "applyFriendBaseUrl",
-      "applyFriendHandoffToken",
-      "applyPilotBaseUrl",
-      "applyPilotHandoffToken"
+      "applyFriendHandoffToken"
     ]);
-    const baseUrl = stored.applyFriendBaseUrl || stored.applyPilotBaseUrl;
-    const token = stored.applyFriendHandoffToken || stored.applyPilotHandoffToken;
+    const baseUrl = stored.applyFriendBaseUrl;
+    const token = stored.applyFriendHandoffToken;
     if (!baseUrl || !token) {
       throw new Error("No prepared assisted application found. Open the job from Apply Friend first.");
     }
