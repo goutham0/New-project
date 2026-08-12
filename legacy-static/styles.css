@@ -400,7 +400,7 @@ p {
 }
 
 .step-grid,
-.pricing-grid,
+.demo-grid,
 .job-layout,
 .portal-grid,
 .architecture-grid {
@@ -449,7 +449,7 @@ p {
   margin-bottom: 0;
 }
 
-.pricing-grid {
+.demo-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
@@ -1316,7 +1316,7 @@ p {
   }
 
   .step-grid,
-  .pricing-grid,
+  .demo-grid,
   .architecture-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -1383,7 +1383,7 @@ p {
   }
 
   .step-grid,
-  .pricing-grid,
+  .demo-grid,
   .portal-grid,
   .architecture-grid,
   .profile-form,

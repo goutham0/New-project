@@ -94,26 +94,12 @@ const jobs = [
 ];
 
 const planRules = {
-  Pro: {
-    quota: "$49.99 per month",
-    canPrepare: true,
-    directLimit: 12,
-    aiLimit: 30,
-    packageText: "Pro includes AI-tailored resumes, ATS keyword matching, cover letters, assisted apply, extension autofill, job tracking, basic AI job recommendations, and standard support."
-  },
-  Elite: {
-    quota: "$99.99 per month",
+  Demo: {
+    quota: "Demo access enabled",
     canPrepare: true,
     directLimit: 40,
     aiLimit: 999,
-    packageText: "Elite adds bulk apply up to 40 jobs per day, unlimited AI-tailored resumes, smart duplicate-job detection, advanced matching filters, analytics, and priority support."
-  },
-  Concierge: {
-    quota: "$199.99 per month",
-    canPrepare: true,
-    directLimit: 40,
-    aiLimit: 999,
-    packageText: "Concierge adds a dedicated recruiter/job assistant, human-reviewed resume optimization, personalized job targeting, interview preparation, mock interview support, follow-up guidance, and VIP support."
+    packageText: "Demo access includes AI-tailored resumes, ATS keyword matching, cover letters, assisted apply, extension autofill, job tracking, duplicate detection, and bulk review."
   }
 };
 
@@ -204,7 +190,7 @@ const planSummary = document.querySelector("#plan-summary");
 function createDefaultState() {
   return {
     user: null,
-    plan: "Pro",
+    plan: "Demo",
     resume: null,
     profile: { ...defaultProfile },
     selectedJobs: [],
@@ -285,9 +271,9 @@ function readinessItems() {
       detail: profileComplete() ? "Required application fields saved" : "Fill the profile form"
     },
     {
-      label: "Plan selected",
+      label: "Demo access",
       done: Boolean(planRules[state.plan]),
-      detail: planRules[state.plan] ? `${state.plan} plan active` : "Choose Pro, Elite, or Concierge"
+      detail: planRules[state.plan] ? "Demo access active" : "Demo access enabled"
     }
   ];
 }
@@ -368,7 +354,7 @@ function renderReadiness() {
   resumeSummary.textContent = state.resume
     ? `${state.resume.name} uploaded and parsed for demo matching.`
     : "Upload a PDF, DOCX, or TXT resume. This demo stores only the file name.";
-  planSummary.textContent = `${state.plan} plan selected. ${planRules[state.plan].packageText}`;
+  planSummary.textContent = planRules[state.plan].packageText;
 
   const gate = applyGate();
   gateMessage.textContent = gate.ready
@@ -543,7 +529,7 @@ function switchTab(tab) {
 
 function setPlan(plan) {
   state.plan = plan;
-  addAudit(`Plan changed to ${plan}.`);
+  addAudit(`Demo access refreshed: ${plan}.`);
   saveState();
   renderAll();
 }
@@ -646,7 +632,7 @@ function loadDemoCandidate() {
     name: "Demo Candidate",
     createdAt: new Date().toISOString()
   };
-  state.plan = "Pro";
+  state.plan = "Demo";
   state.resume = {
     name: "Demo_Candidate_Resume.pdf",
     type: "application/pdf",

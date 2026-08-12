@@ -33,10 +33,9 @@ const blankProfile = {
   portfolioUrl: ""
 };
 
-export default function ProfileForm({ initialProfile, initialUser, initialResume }) {
+export default function ProfileForm({ initialProfile, initialResume }) {
   const router = useRouter();
   const [profile, setProfile] = useState({ ...blankProfile, ...initialProfile });
-  const [plan, setPlan] = useState(initialUser.plan && initialUser.plan !== "Free" ? initialUser.plan : "ApplyFriend Pro");
   const [resume, setResume] = useState(initialResume);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -51,7 +50,7 @@ export default function ProfileForm({ initialProfile, initialUser, initialResume
     const response = await fetch("/api/candidate/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profile, plan })
+      body: JSON.stringify({ profile, plan: "Demo Access" })
     });
     const data = await response.json();
     setBusy(false);
@@ -82,23 +81,6 @@ export default function ProfileForm({ initialProfile, initialUser, initialResume
 
   return (
     <div className="dashboard-grid">
-      <article className="dashboard-card">
-        <h3>Plan selection</h3>
-        <p>Select the ApplyFriend plan that matches the level of AI, bulk apply, and recruiter support you want.</p>
-        <div className="button-row">
-          {["ApplyFriend Pro", "ApplyFriend Elite", "ApplyFriend Concierge"].map((item) => (
-            <button
-              className={plan === item ? "primary-button" : "secondary-button"}
-              type="button"
-              key={item}
-              onClick={() => setPlan(item)}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-      </article>
-
       <article className="dashboard-card">
         <h3>Resume upload</h3>
         <p>{resume ? `Current resume: ${resume.fileName}` : "Upload a PDF, DOCX, or TXT resume."}</p>

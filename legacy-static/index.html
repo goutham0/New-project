@@ -20,7 +20,7 @@
       </button>
       <nav class="site-nav" aria-label="Primary navigation">
         <a href="#how">How It Works</a>
-        <a href="#pricing">Pricing</a>
+        <a href="#demo">Demo</a>
         <a href="#jobs">Jobs</a>
         <a href="#candidate">Candidate Portal</a>
         <a href="#workspace">Demo App</a>
@@ -54,7 +54,7 @@
         <div class="section-heading">
           <p class="eyebrow">How it works</p>
           <h2 id="how-title">One profile, many prepared applications</h2>
-          <p>The platform keeps every apply workflow candidate-approved, plan-aware, and traceable.</p>
+          <p>The platform keeps every apply workflow candidate-approved, demo-ready, and traceable.</p>
         </div>
         <div class="step-grid">
           <article class="step-card">
@@ -69,8 +69,8 @@
           </article>
           <article class="step-card">
             <span class="step-number">03</span>
-            <h3>Choose plan</h3>
-            <p>Pick Pro, Elite, or Concierge to unlock AI tailoring, assisted apply, and application workflows.</p>
+            <h3>Open demo access</h3>
+            <p>Use the MVP workspace to test AI tailoring, assisted apply, and application workflows.</p>
           </article>
           <article class="step-card">
             <span class="step-number">04</span>
@@ -90,70 +90,30 @@
         </div>
       </section>
 
-      <section class="section band" id="pricing" aria-labelledby="pricing-title">
+      <section class="section band" id="demo" aria-labelledby="demo-title">
         <div class="section-heading">
-          <p class="eyebrow">Monthly plans</p>
-          <h2 id="pricing-title">Choose the level of job-search support you need</h2>
-          <p>All plans include AI-assisted application preparation with clear monthly billing.</p>
+          <p class="eyebrow">Product demo</p>
+          <h2 id="demo-title">Test the full candidate workflow</h2>
+          <p>The demo workspace focuses on profile completion, resume upload, live jobs, assisted handoff, bulk review, and application tracking.</p>
         </div>
-        <div class="pricing-grid">
+        <div class="demo-grid">
           <article class="price-card">
             <div>
-              <h3>ApplyFriend Pro</h3>
-              <p class="price">$49.99<span>/month</span></p>
-              <p class="muted">AI Tailored Resume + Assisted Apply</p>
+              <h3>Resume intelligence</h3>
+              <p class="muted">Upload one master resume, parse it, score it against a job description, and generate a tailored PDF package.</p>
             </div>
-            <ul class="feature-list">
-              <li>AI-tailored resume generation based on job description</li>
-              <li>ATS keyword matching and resume optimization</li>
-              <li>AI cover letter generation</li>
-              <li>Assisted apply support</li>
-              <li>Chrome extension autofill</li>
-              <li>Job tracking dashboard</li>
-              <li>Basic AI job recommendations</li>
-              <li>Standard support</li>
-            </ul>
-            <button class="secondary-button plan-choice" type="button" data-plan="Pro">Start Pro</button>
           </article>
-          <article class="price-card featured" aria-label="Recommended plan">
-            <div class="plan-badge">Most Popular</div>
+          <article class="price-card featured">
             <div>
-              <h3>ApplyFriend Elite</h3>
-              <p class="price">$99.99<span>/month</span></p>
-              <p class="muted">Assisted Apply + Bulk Apply up to 40 jobs daily</p>
+              <h3>Apply workflow</h3>
+              <p class="muted">Search jobs, select bulk candidates, review generated packages, confirm consent, and record application status.</p>
             </div>
-            <ul class="feature-list">
-              <li>Everything in Pro</li>
-              <li>Bulk apply up to 40 jobs per day</li>
-              <li>Unlimited AI-tailored resumes</li>
-              <li>Smart duplicate-job detection</li>
-              <li>Priority assisted apply queue</li>
-              <li>Advanced job matching filters</li>
-              <li>Application analytics dashboard</li>
-              <li>Priority support</li>
-            </ul>
-            <button class="primary-button plan-choice" type="button" data-plan="Elite">Start Elite</button>
           </article>
           <article class="price-card">
-            <div class="plan-badge">Best Results</div>
             <div>
-              <h3>ApplyFriend Concierge</h3>
-              <p class="price">$199.99<span>/month</span></p>
-              <p class="muted">AI + Dedicated Recruiter Fully Managed Job Search</p>
+              <h3>Assisted extension</h3>
+              <p class="muted">Open unsupported jobs, fetch a prepared package, autofill safe fields, and let the candidate submit manually.</p>
             </div>
-            <ul class="feature-list">
-              <li>Everything in Elite</li>
-              <li>Dedicated recruiter/job assistant</li>
-              <li>Recruiter fully manages applications</li>
-              <li>Human-reviewed resume optimization</li>
-              <li>Personalized job targeting strategy</li>
-              <li>Recruiter-monitored application quality</li>
-              <li>Fixed interview preparation plan per month</li>
-              <li>Mock interview support</li>
-              <li>Follow-up message/email guidance</li>
-              <li>VIP support</li>
-            </ul>
-            <button class="secondary-button plan-choice" type="button" data-plan="Concierge">Start Concierge</button>
           </article>
         </div>
         <p class="muted">Applications depend on job board availability, user profile completeness, and platform limitations.</p>
@@ -183,12 +143,12 @@
           <aside class="apply-panel" aria-labelledby="apply-panel-title">
             <h3 id="apply-panel-title">Selected applications</h3>
             <div class="metric-row">
-              <span>Current plan</span>
-              <strong id="current-plan">Pro</strong>
+              <span>Demo access</span>
+              <strong id="current-plan">Active</strong>
             </div>
             <div class="metric-row">
-              <span>Direct quota</span>
-              <strong id="quota-label">12 monthly</strong>
+              <span>Review capacity</span>
+              <strong id="quota-label">40 jobs</strong>
             </div>
             <div class="metric-row">
               <span>Selected</span>
@@ -196,7 +156,7 @@
             </div>
             <button class="primary-button full" type="button" id="prepare-button">Prepare applications</button>
             <div class="package-preview" id="package-preview">
-              <p>Select paid-plan jobs to see the review package.</p>
+              <p>Select jobs to see the review package.</p>
             </div>
           </aside>
         </div>
@@ -205,7 +165,7 @@
       <section class="section band" id="candidate" aria-labelledby="candidate-title">
         <div class="section-heading">
           <p class="eyebrow">Candidate portal</p>
-          <h2 id="candidate-title">Onboarding blocks direct apply until profile, resume, and plan are ready</h2>
+          <h2 id="candidate-title">Onboarding blocks direct apply until profile and resume are ready</h2>
           <p>The candidate experience mirrors the final product flow: prepare, review, consent, submit.</p>
         </div>
         <div class="portal-grid summary-portal">
@@ -264,8 +224,8 @@
                 <strong id="sidebar-account">Guest</strong>
               </div>
               <div>
-                <span>Plan</span>
-                <strong id="sidebar-plan">Pro</strong>
+                <span>Access</span>
+                <strong id="sidebar-plan">Demo</strong>
               </div>
               <div>
                 <span>Readiness</span>
@@ -298,16 +258,14 @@
                   </label>
                 </article>
                 <article class="setup-card" id="plan-card">
-                  <h4>3. Plan</h4>
-                  <p id="plan-summary">Choose Pro, Elite, or Concierge to prepare AI application packages.</p>
+                  <h4>3. Demo access</h4>
+                  <p id="plan-summary">Demo access is enabled for AI application packages.</p>
                   <div class="compact-buttons">
-                    <button class="secondary-button plan-choice" type="button" data-plan="Pro">Pro</button>
-                    <button class="secondary-button plan-choice" type="button" data-plan="Elite">Elite</button>
-                    <button class="secondary-button plan-choice" type="button" data-plan="Concierge">Concierge</button>
+                    <button class="secondary-button plan-choice" type="button" data-plan="Demo">Demo enabled</button>
                   </div>
                 </article>
               </div>
-              <div class="notice-panel" id="gate-message">Complete account, resume, profile, and paid plan to unlock direct apply.</div>
+              <div class="notice-panel" id="gate-message">Complete account, resume, and profile to unlock direct apply.</div>
             </section>
 
             <section class="workspace-panel" data-panel="profile" aria-labelledby="profile-form-title">
@@ -556,10 +514,6 @@
           <details>
             <summary>Can AI invent experience to improve my chances?</summary>
             <p>No. AI can rewrite truthful bullet points, emphasize relevant skills, and reorder sections. It must not invent employers, degrees, projects, certifications, or years of experience.</p>
-          </details>
-          <details>
-            <summary>Can I cancel anytime?</summary>
-            <p>Yes. Subscription controls should route through the active billing provider when production payments are connected.</p>
           </details>
         </div>
       </section>

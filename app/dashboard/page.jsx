@@ -32,7 +32,7 @@ export default async function DashboardPage() {
   ]);
   const profileComplete = required.every((field) => String(profile[field] || "").trim());
   const readiness = Math.round(
-    ([Boolean(user), Boolean(resume), profileComplete, user.plan !== "Free"].filter(Boolean).length / 4) * 100
+    ([Boolean(user), Boolean(resume), profileComplete].filter(Boolean).length / 3) * 100
   );
 
   return (
@@ -50,12 +50,12 @@ export default async function DashboardPage() {
         <article className="stat-card">
           <p className="panel-kicker">Readiness</p>
           <h3>{readiness}%</h3>
-          <p>Account, resume, profile, and paid plan gate direct apply.</p>
+          <p>Account, resume, and complete profile unlock the demo apply workflows.</p>
         </article>
         <article className="stat-card">
-          <p className="panel-kicker">Plan</p>
-          <h3>{user.plan}</h3>
-          <p>Upgrade to Pro, Elite, or Concierge to unlock AI preparation and assisted workflows.</p>
+          <p className="panel-kicker">Workspace</p>
+          <h3>Demo access</h3>
+          <p>AI preparation, assisted handoff, and bulk review are available for the MVP demo.</p>
         </article>
         <article className="stat-card">
           <p className="panel-kicker">Resume</p>
@@ -72,7 +72,7 @@ export default async function DashboardPage() {
       <div className="dashboard-grid two" style={{ marginTop: 16 }}>
         <article className="dashboard-card">
           <h3>Apply workflows</h3>
-          <p>Choose the workflow that matches the job source and your plan.</p>
+          <p>Choose the workflow that matches the job source and review state.</p>
           <div className="button-row">
             <Link className="secondary-button" href="/dashboard/manual-apply">Manual apply</Link>
             <Link className="secondary-button" href="/dashboard/assisted-apply">Assisted apply</Link>

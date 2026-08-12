@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-const feedbackTypes = ["Bug", "Feature Request", "Pricing", "Recruiter Support", "Extension Issue", "Other"];
+const feedbackTypes = ["Bug", "Feature Request", "Demo Flow", "Recruiter Support", "Extension Issue", "Other"];
 
 export default function FeedbackForm() {
   const [status, setStatus] = useState("");

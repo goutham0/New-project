@@ -8,7 +8,7 @@ export default async function DashboardLayout({ children }) {
 
   return (
     <main className="dashboard-shell">
-      <DashboardNav user={{ email: user.email, plan: user.plan }} />
+      <DashboardNav user={{ email: user.email }} />
       <section className="dashboard-main">{children}</section>
     </main>
   );

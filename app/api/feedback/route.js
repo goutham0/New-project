@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { addAudit, saveFeedback } from "@/lib/store";
 
-const allowedTypes = new Set(["Bug", "Feature Request", "Pricing", "Recruiter Support", "Extension Issue", "Other"]);
+const allowedTypes = new Set(["Bug", "Feature Request", "Demo Flow", "Recruiter Support", "Extension Issue", "Other"]);
 
 export async function POST(request) {
   const user = await currentUser();
@@ -17,20 +17,30 @@ export async function POST(request) {
     return NextResponse.json({ error: "Name, email, and message are required." }, { status: 400 });
   }
 
-  const feedback = await saveFeedback({
-    userId: user?.id || null,
-    name,
-    email,
-    type,
-    rating,
-    message
-  });
-  await addAudit({
-    userId: user?.id || null,
-    eventType: "FEEDBACK_SUBMITTED",
-    message: "Visitor submitted feedback.",
-    metadata: { feedbackId: feedback.id, type, rating }
-  });
+  let feedback;
+  try {
+    feedback = await saveFeedback({
+      userId: user?.id || null,
+      name,
+      email,
+      type,
+      rating,
+      message
+    });
+    await addAudit({
+      userId: user?.id || null,
+      eventType: "FEEDBACK_SUBMITTED",
+      message: "Visitor submitted feedback.",
+      metadata: { feedbackId: feedback.id, type, rating }
+    });
+  } catch (error) {
+    console.warn("Feedback storage failed:", error.message);
+    return NextResponse.json({
+      ok: true,
+      stored: false,
+      warning: "Feedback received, but storage is temporarily unavailable."
+    }, { status: 202 });
+  }
 
-  return NextResponse.json({ ok: true, feedbackId: feedback.id });
+  return NextResponse.json({ ok: true, stored: true, feedbackId: feedback.id });
 }

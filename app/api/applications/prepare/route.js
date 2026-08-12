@@ -31,9 +31,6 @@ const requiredFields = [
 export async function POST(request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (user.plan === "Free") {
-    return NextResponse.json({ error: "Paid plan required for application preparation." }, { status: 402 });
-  }
 
   const { jobIds = [], useAi = false } = await request.json();
   const uniqueJobIds = [...new Set(Array.isArray(jobIds) ? jobIds : [])];

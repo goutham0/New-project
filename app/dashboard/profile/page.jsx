@@ -15,7 +15,7 @@ export default async function ProfilePage() {
           <p>Complete mandatory data before using direct bulk apply or assisted apply.</p>
         </div>
       </div>
-      <ProfileForm initialProfile={profile} initialUser={user} initialResume={resume} />
+      <ProfileForm initialProfile={profile} initialResume={resume} />
     </>
   );
 }

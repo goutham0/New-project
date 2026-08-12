@@ -8,7 +8,6 @@ const tabs = [
   "Job Preferences",
   "Application Preferences",
   "Notifications",
-  "Billing",
   "Security"
 ];
 
@@ -35,8 +34,7 @@ const defaults = {
   emailAlerts: true,
   interviewReminders: true,
   dailySummary: true,
-  recruiterUpdates: true,
-  currentPlan: "ApplyFriend Pro"
+  recruiterUpdates: true
 };
 
 export default function SettingsPanel() {
@@ -119,13 +117,6 @@ export default function SettingsPanel() {
             <Toggle label="Interview reminders" checked={settings.interviewReminders} onChange={(value) => update("interviewReminders", value)} />
             <Toggle label="Daily application summary" checked={settings.dailySummary} onChange={(value) => update("dailySummary", value)} />
             <Toggle label="Recruiter updates" checked={settings.recruiterUpdates} onChange={(value) => update("recruiterUpdates", value)} />
-          </SettingGrid>
-        )}
-        {active === "Billing" && (
-          <SettingGrid>
-            <Select label="Current plan" value={settings.currentPlan} options={["ApplyFriend Pro", "ApplyFriend Elite", "ApplyFriend Concierge"]} onChange={(value) => update("currentPlan", value)} />
-            <button className="secondary-button" type="button">Upgrade/downgrade placeholder</button>
-            <button className="secondary-button" type="button">Cancel subscription placeholder</button>
           </SettingGrid>
         )}
         {active === "Security" && (

@@ -38,7 +38,7 @@ export default function DashboardNav({ user }) {
       </nav>
       <div className="sidebar-footer">
         <strong>{user.email}</strong>
-        <span>Plan: {user.plan}</span>
+        <span>Demo workspace</span>
         <button className="secondary-button" type="button" onClick={logout}>Logout</button>
       </div>
     </aside>
