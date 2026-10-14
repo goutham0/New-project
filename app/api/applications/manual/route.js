@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
-import { listApplications, createApplication, addAudit } from "@/lib/store";
+import { listApplications, createApplication, updateApplication, addAudit } from "@/lib/store";
 import { getJobById } from "@/lib/jobs";
 
 export async function POST(request) {
@@ -13,18 +13,17 @@ export async function POST(request) {
     return NextResponse.json({ error: "Job was not found." }, { status: 404 });
   }
 
-  const existing = (await listApplications(user.id)).find((application) => application.jobId === job.id && application.status === "SUBMITTED");
+  const existing = (await listApplications(user.id)).find((application) => application.jobId === job.id && ["SUBMITTED", "MANUAL_SUBMITTED"].includes(application.status));
   if (existing) {
     return NextResponse.json({ application: existing, alreadySubmitted: true });
   }
 
-  const application = await createApplication({
+  let application = await createApplication({
     userId: user.id,
     jobId: job.id,
     applicationType: "MANUAL",
-    status: "SUBMITTED",
+    status: "MANUAL_SUBMITTED",
     matchScore: null,
-    externalApplicationId: `MANUAL-${Math.floor(Math.random() * 900000 + 100000)}`,
     package: {
       job: {
         id: job.id,
@@ -38,6 +37,10 @@ export async function POST(request) {
     }
   });
 
+  application = await updateApplication(user.id, application.id, {
+    status: "MANUAL_SUBMITTED",
+    package: { ...application.package, submittedAt: new Date().toISOString(), submissionSource: "candidate_confirmation" }
+  });
   await addAudit({
     userId: user.id,
     eventType: "MANUAL_APPLICATION_MARKED_SUBMITTED",

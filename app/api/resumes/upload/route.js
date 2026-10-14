@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { saveResume, addAudit } from "@/lib/store";
 import { extractResumeText } from "@/lib/resumeText";
-import { saveUploadedFile, sha256 } from "@/lib/fileStorage";
+import { saveUploadedFile } from "@/lib/fileStorage";
 import { parseResumeTextToJson } from "@/lib/resumePipeline";
 
 const allowedExtensions = [".docx", ".pdf"];
-const maxFileBytes = 8 * 1024 * 1024;
+const maxFileBytes = 4 * 1024 * 1024;
 
 export async function POST(request) {
   const user = await currentUser();
@@ -23,24 +23,20 @@ export async function POST(request) {
     return NextResponse.json({ error: "Unsupported file type. Upload a .docx or .pdf resume." }, { status: 400 });
   }
   if (file.size > maxFileBytes) {
-    return NextResponse.json({ error: "Resume file is too large. Maximum size is 8 MB." }, { status: 413 });
+    return NextResponse.json({ error: "Resume file is too large. Maximum size is 4 MB." }, { status: 413 });
   }
 
-  const text = await extractResumeText(file);
+  let text;
+  try { text = await extractResumeText(file); }
+  catch (error) { return NextResponse.json({ error: error.message }, { status: 422 }); }
   if (!text || text.length < 80) {
     return NextResponse.json({ error: "Resume parsing failed. Upload a readable DOCX/PDF or paste resume text in the tailoring page." }, { status: 422 });
   }
-  const fallbackBuffer = Buffer.from(await file.arrayBuffer());
   let stored;
   try {
     stored = await saveUploadedFile(file, { userId: user.id, folder: "resumes" });
   } catch (error) {
-    stored = {
-      fileName,
-      filePath: "",
-      checksum: sha256(fallbackBuffer),
-      warning: `Original file could not be persisted to local storage: ${error.message}`
-    };
+    return NextResponse.json({ error: "Unable to store your original resume. Please try again." }, { status: 503 });
   }
   const parsedJson = parseResumeTextToJson(text, { email: user.email });
   const resume = await saveResume({

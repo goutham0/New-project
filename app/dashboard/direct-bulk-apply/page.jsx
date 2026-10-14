@@ -5,9 +5,9 @@ export default function DirectBulkApplyPage() {
     <>
       <div className="dashboard-header">
         <div className="dashboard-title">
-          <p className="eyebrow">Bulk apply</p>
+          <p className="eyebrow">Bulk preparation</p>
           <h1>Review and apply selected jobs</h1>
-          <p>Select live API jobs, review the prepared package, then submit direct-supported jobs with consent. Adzuna jobs open as assisted apply because they are redirect listings, not ATS submission APIs.</p>
+          <p>Select jobs and prepare a separate application package for each. Review your documents, open each employer form, and submit with the extension's autofill assistance.</p>
         </div>
       </div>
       <JobsBrowser mode="direct" />

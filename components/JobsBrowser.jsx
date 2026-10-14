@@ -7,6 +7,9 @@ export default function JobsBrowser({ mode }) {
   const router = useRouter();
   const [jobs, setJobs] = useState([]);
   const [query, setQuery] = useState("");
+  const [where, setWhere] = useState("");
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
   const [selected, setSelected] = useState([]);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
@@ -21,16 +24,22 @@ export default function JobsBrowser({ mode }) {
   const isAssisted = mode === "assisted";
 
   useEffect(() => {
+    const controller = new AbortController();
     const timer = setTimeout(async () => {
       setLoading(true);
-      const response = await fetch(`/api/jobs?mode=${mode}&q=${encodeURIComponent(query)}`);
+      try {
+      const response = await fetch(`/api/jobs?mode=${mode}&q=${encodeURIComponent(query)}&where=${encodeURIComponent(where)}&page=${page}`, { signal: controller.signal });
       const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Job search failed.");
       setJobs(data.jobs || []);
+      setHasMore(Boolean(data.hasMore));
       setSourceStatus(data.sourceStatus || null);
-      setLoading(false);
+      } catch (error) {
+        if (error.name !== "AbortError") { setJobs([]); setStatus("Unable to load jobs. Please try again."); }
+      } finally { if (!controller.signal.aborted) setLoading(false); }
     }, 150);
-    return () => clearTimeout(timer);
-  }, [mode, query]);
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [mode, query, where, page]);
 
   function toggle(jobId) {
     setSelected((current) => current.includes(jobId) ? current.filter((id) => id !== jobId) : [...current, jobId]);
@@ -40,18 +49,27 @@ export default function JobsBrowser({ mode }) {
   }
 
   async function prepareJobIds(jobIds, options = {}) {
-    setStatus("Preparing application packages...");
+    const prepared = [];
+    for (const [index, jobId] of jobIds.entries()) {
+    setStatus(`Preparing ${index + 1} of ${jobIds.length}. This can take a few minutes per resume.`);
+    try {
     const response = await fetch("/api/applications/prepare", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jobIds, useAi: Boolean(options.useAi) })
+      body: JSON.stringify({ jobIds: [jobId], useAi: true })
     });
     const data = await response.json();
     if (!response.ok) {
       setStatus(formatApiError(data, "Unable to prepare applications."));
-      return null;
+      return prepared;
     }
-    return data.applications || [];
+    prepared.push(...(data.applications || []));
+    } catch {
+      setStatus(`Unable to finish preparation. ${prepared.length} package(s) are saved; retry to continue.`);
+      return prepared;
+    }
+    }
+    return prepared;
   }
 
   async function prepareAssisted(job) {
@@ -64,7 +82,7 @@ export default function JobsBrowser({ mode }) {
       setStatus("Unable to prepare this assisted application.");
       return;
     }
-    setStatus("Prepared. Opening secure handoff, then employer form. The extension will autofill automatically when possible.");
+    setStatus("Prepared. Opening the employer form. Click the extension's Autofill page button and review the filled details.");
     const targetUrl = withApplyFriendHandoffPage(job.applyUrl, applications[0].handoffToken);
     if (applyWindow) {
       applyWindow.opener = null;
@@ -153,6 +171,7 @@ export default function JobsBrowser({ mode }) {
   async function markManualSubmitted(job) {
     setSubmitting(true);
     setStatus("Recording manual application...");
+    try {
     const response = await fetch("/api/applications/manual", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -166,6 +185,8 @@ export default function JobsBrowser({ mode }) {
     }
     setStatus(`${job.company} recorded as submitted.`);
     router.refresh();
+    } catch { setStatus("Unable to record your application. Please try again."); }
+    finally { setSubmitting(false); }
   }
 
   const directReadyCount = directApplications.filter((application) =>
@@ -182,9 +203,11 @@ export default function JobsBrowser({ mode }) {
         <input
           className="search-input"
           value={query}
-          onChange={(event) => setQuery(event.target.value)}
+          onChange={(event) => { setQuery(event.target.value); setPage(1); }}
+          aria-label="Search jobs"
           placeholder="Search jobs, companies, skills"
         />
+        <input className="search-input" aria-label="Job location" placeholder="City or location" value={where} onChange={(event) => { setWhere(event.target.value); setPage(1); }} />
         {isDirect && (
           <button
             className="primary-button"
@@ -192,15 +215,15 @@ export default function JobsBrowser({ mode }) {
             disabled={!selected.length || preparingDirect || submitting}
             onClick={prepareDirectReview}
           >
-            {preparingDirect ? "Preparing..." : `Apply selected${selected.length ? ` (${selected.length})` : ""}`}
+            {preparingDirect ? "Preparing..." : `Prepare selected${selected.length ? ` (${selected.length})` : ""}`}
           </button>
         )}
       </div>
       {sourceStatus && (
         <p className={`status-line ${sourceStatus.adzuna === "error" ? "error-line" : ""}`}>
           {sourceStatus.adzuna === "live" && `Live Adzuna jobs loaded${sourceStatus.adzunaCount ? ` from ${sourceStatus.adzunaCount.toLocaleString()} matching ads` : ""}.`}
-          {sourceStatus.adzuna === "not_configured" && "Add ADZUNA_APP_ID and ADZUNA_APP_KEY to show live Adzuna jobs. Sample jobs are shown for now."}
-          {sourceStatus.adzuna === "error" && "Live Adzuna jobs are unavailable right now. Sample jobs are shown for now."}
+          {sourceStatus.adzuna === "not_configured" && "Live job search is not connected yet."}
+          {sourceStatus.adzuna === "error" && "Live job search is temporarily unavailable. Please try again."}
         </p>
       )}
       {isDirect && (
@@ -316,6 +339,11 @@ export default function JobsBrowser({ mode }) {
             <p>Try a different search term.</p>
           </div>
         )}
+      </div>
+      <div className="button-row compact" aria-label="Job search pages">
+        <button type="button" className="secondary-button" disabled={loading || page <= 1} onClick={() => setPage((current) => current - 1)}>Previous</button>
+        <span>Page {page}</span>
+        <button type="button" className="secondary-button" disabled={loading || !hasMore} onClick={() => setPage((current) => current + 1)}>Next</button>
       </div>
     </div>
   );

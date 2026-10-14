@@ -18,6 +18,7 @@ export async function GET(request) {
     : jobId
       ? applications.find((item) => item.jobId === jobId && item.applicationType === "ASSISTED")
     : applications.find((item) => item.applicationType === "ASSISTED");
+  if (!assisted) return NextResponse.json({ error: "Prepared application not found." }, { status: 404 });
   if (handoff?.applicationId && assisted && assisted.status === "NEEDS_REVIEW") {
     await updateApplication(user.id, assisted.id, { status: "ASSISTED_OPENED" });
   }

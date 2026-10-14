@@ -15,12 +15,13 @@ export async function PUT(request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  const profile = body.profile || {};
-  const plan = body.plan || user.plan;
+  if (!body.profile || typeof body.profile !== "object" || Array.isArray(body.profile) || JSON.stringify(body.profile).length > 20000) {
+    return NextResponse.json({ error: "Invalid profile data." }, { status: 400 });
+  }
+  const profile = { ...await getProfile(user.id), ...body.profile };
   const nextUser = await updateUser(user.id, {
     name: [profile.firstName, profile.lastName].filter(Boolean).join(" ") || user.name,
-    email: profile.email || user.email,
-    plan
+    email: user.email
   });
   const saved = await saveProfile(user.id, profile);
   await addAudit({ userId: user.id, eventType: "PROFILE_SAVED", message: "Candidate profile saved." });

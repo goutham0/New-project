@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
-import { getProfile, getLatestResume, addAudit } from "@/lib/store";
+import { getProfile, getLatestResume, saveTailoredResume, addAudit, consumeRequestLimit } from "@/lib/store";
+import { sha256 } from "@/lib/fileStorage";
 import { extractResumeText } from "@/lib/resumeText";
 import { createResumePdf, resumeToPlainText } from "@/lib/pdf";
 import { generateTailoredResume } from "@/lib/openaiResume";
 import { createResumeDocx } from "@/lib/docxResume";
 
+export const maxDuration = 300;
+
 export async function POST(request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!await consumeRequestLimit(`ai:${user.id}`, 60)) return NextResponse.json({ error: "Hourly AI limit reached. Please try again later." }, { status: 429 });
 
   const contentType = request.headers.get("content-type") || "";
   let resumeText = "";
@@ -19,7 +23,8 @@ export async function POST(request) {
     const file = formData.get("resume");
     const pastedResumeText = String(formData.get("resumeText") || "").trim();
     if (file && typeof file !== "string") {
-      resumeText = await extractResumeText(file);
+      try { resumeText = await extractResumeText(file); }
+      catch (error) { return NextResponse.json({ error: error.message }, { status: 422 }); }
       if (!resumeText.trim()) resumeText = pastedResumeText;
     } else {
       resumeText = pastedResumeText;
@@ -43,7 +48,10 @@ export async function POST(request) {
   const profile = await getProfile(user.id);
   let result;
   try {
-    result = await generateTailoredResume({ resumeText, jobDescription, profile, requireAi: false });
+    if (resumeText.length > 30000 || jobDescription.length > 18000) {
+      return NextResponse.json({ error: "Resume exceeds 30,000 characters or job description exceeds 18,000 characters. Shorten the input and retry." }, { status: 413 });
+    }
+    result = await generateTailoredResume({ resumeText, jobDescription, profile, requireAi: true });
   } catch (error) {
     await addAudit({
       userId: user.id,
@@ -60,6 +68,12 @@ export async function POST(request) {
 
   const pdf = createResumePdf(result);
   const docx = await createResumeDocx(result);
+  const saved = await saveTailoredResume({
+    userId: user.id,
+    jobDescriptionHash: sha256(Buffer.from(jobDescription)),
+    tailoredJson: { ...result, artifact: { docxBase64: docx.toString("base64"), pdfBase64: pdf.toString("base64") } },
+    tailoringNotes: result.notes || []
+  });
   await addAudit({
     userId: user.id,
     eventType: "TAILORED_RESUME_PDF_CREATED",
@@ -68,6 +82,8 @@ export async function POST(request) {
   });
   return NextResponse.json({
     result,
+    tailoredResumeId: saved.id,
+    downloadUrl: `/api/tailored-resumes/${saved.id}/download`,
     resumeTextOutput: resumeToPlainText(result),
     pdfBase64: pdf.toString("base64"),
     docxBase64: docx.toString("base64"),

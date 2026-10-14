@@ -7,7 +7,7 @@ const links = [
   ["home", "Home"],
   ["features", "Features"],
   ["how", "How it works"],
-  ["demo", "Demo"],
+  ["demo", "Workflow"],
   ["about", "About"],
   ["feedback", "Feedback"],
   ["settings", "Settings"],

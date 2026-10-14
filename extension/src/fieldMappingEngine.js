@@ -13,9 +13,9 @@ window.ApplyFriendFieldMapping = {
       .join(" ");
     const aria = input.getAttribute("aria-label");
     const placeholder = input.getAttribute("placeholder");
-    const fieldset = input.closest("fieldset")?.innerText || "";
+    const fieldset = input.closest("fieldset")?.querySelector("legend")?.innerText || "";
     const nearby = input.closest("label")?.innerText || input.parentElement?.innerText || "";
-    return [fieldset, label?.innerText, labelledBy, aria, placeholder, nearby, input.name, input.id].filter(Boolean).join(" ");
+    return [label?.innerText || labelledBy || aria || input.closest("label")?.innerText || placeholder || input.name || input.id || nearby, ["radio", "checkbox"].includes(input.type) ? fieldset : ""].filter(Boolean).join(" ");
   },
 
   optionTextFor(input) {
@@ -44,7 +44,7 @@ window.ApplyFriendFieldMapping = {
     if (text.includes("country")) return profile.country;
     if (text.includes("current company")) return profile.currentCompany;
     if (text.includes("current title") || text.includes("job title")) return profile.currentTitle;
-    if (text.includes("years") && text.includes("experience")) return profile.yearsExperience;
+    if (/^(total )?years (of )?(professional |work )?experience$/.test(text)) return profile.yearsExperience;
     if (text.includes("highest education") || text.includes("education level")) return profile.highestEducation;
     if (text.includes("university") || text.includes("school") || text.includes("college")) return profile.university;
     if (text.includes("degree")) return profile.degree || profile.highestEducation;
@@ -75,7 +75,7 @@ window.ApplyFriendFieldMapping = {
     const text = this.normalize(label);
     if (text.includes("sponsor")) return this.yesNo(profile.sponsorshipRequired);
     if (text.includes("authorized") || text.includes("authorization") || text.includes("work in")) {
-      return this.isAuthorized(profile.workAuthorization) ? "yes" : this.yesNo(profile.workAuthorization);
+      return this.yesNo(profile.workAuthorization);
     }
     if (text.includes("remote") || text.includes("hybrid") || text.includes("onsite")) return profile.remotePreference;
     if (text.includes("relocate")) return this.yesNo(profile.willingToRelocate);
@@ -86,6 +86,9 @@ window.ApplyFriendFieldMapping = {
     const option = this.normalize(optionText);
     const desired = this.normalize(desiredValue);
     if (!option || !desired) return false;
+    const directOption = this.yesNo(option);
+    const directDesired = this.yesNo(desired);
+    if (directOption && directDesired) return directOption === directDesired;
     if (option === desired || option.includes(desired) || desired.includes(option)) return true;
     const desiredYesNo = this.yesNo(desired);
     const optionYesNo = this.yesNo(option);
@@ -113,7 +116,7 @@ window.ApplyFriendFieldMapping = {
   yesNo(value) {
     const text = this.normalize(value);
     if (!text) return "";
-    if (/\b(no|false|n)\b/.test(text) || text.includes("not require") || text.includes("does not require")) return "no";
+    if (/\b(no|false|n)\b/.test(text) || text.includes("not authorized") || text.includes("not require") || text.includes("does not require")) return "no";
     if (/\b(yes|true|y)\b/.test(text) || text.includes("authorized") || text.includes("citizen") || text.includes("permanent resident")) return "yes";
     return "";
   },

@@ -9,6 +9,8 @@ if (!window.__APPLYFRIEND_ASSISTED_APPLY_READY__) {
     for (const field of fields) {
       const type = String(field.getAttribute("type") || "").toLowerCase();
       if (["button", "submit", "reset", "hidden", "password"].includes(type)) continue;
+      if (field.disabled || field.readOnly || !field.getClientRects().length) continue;
+      if (!["radio", "checkbox"].includes(type) && field.value) continue;
 
       const label = window.ApplyFriendFieldMapping.labelFor(field);
       const value = window.ApplyFriendFieldMapping.valueFor(label, profile, application);
@@ -87,14 +89,7 @@ if (!window.__APPLYFRIEND_ASSISTED_APPLY_READY__) {
     return true;
   });
 
-  window.ApplyFriendApi.handoff().then((handoff) => {
-    if (!handoff) return;
-    [900, 2200, 4500, 7500].forEach((delay) => setTimeout(() => {
-      autofillApplyFriend()
-        .then((filled) => {
-          window.__APPLYFRIEND_LAST_FILL_COUNT__ = Math.max(window.__APPLYFRIEND_LAST_FILL_COUNT__ || 0, filled);
-        })
-        .catch(() => {});
-    }, delay));
-  });
+  // Capture handoff only. Filling starts from the candidate's extension action;
+  // a stored package must never populate unrelated pages automatically.
+  window.ApplyFriendApi.handoff().catch(() => {});
 }

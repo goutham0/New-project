@@ -30,7 +30,7 @@ export default async function DashboardPage() {
     getLatestResume(user.id),
     listApplications(user.id)
   ]);
-  const profileComplete = required.every((field) => String(profile[field] || "").trim());
+  const profileComplete = required.every((field) => String(profile[field] ?? "").trim());
   const readiness = Math.round(
     ([Boolean(user), Boolean(resume), profileComplete].filter(Boolean).length / 3) * 100
   );
@@ -50,12 +50,12 @@ export default async function DashboardPage() {
         <article className="stat-card">
           <p className="panel-kicker">Readiness</p>
           <h3>{readiness}%</h3>
-          <p>Account, resume, and complete profile unlock the demo apply workflows.</p>
+          <p>Complete your profile and upload a resume to prepare applications.</p>
         </article>
         <article className="stat-card">
           <p className="panel-kicker">Workspace</p>
-          <h3>Demo access</h3>
-          <p>AI preparation, assisted handoff, and bulk review are available for the MVP demo.</p>
+          <h3>Candidate workspace</h3>
+          <p>Prepare documents, review applications, and open employer forms.</p>
         </article>
         <article className="stat-card">
           <p className="panel-kicker">Resume</p>
@@ -76,7 +76,7 @@ export default async function DashboardPage() {
           <div className="button-row">
             <Link className="secondary-button" href="/dashboard/manual-apply">Manual apply</Link>
             <Link className="secondary-button" href="/dashboard/assisted-apply">Assisted apply</Link>
-            <Link className="primary-button" href="/dashboard/direct-bulk-apply">Direct bulk apply</Link>
+            <Link className="primary-button" href="/dashboard/direct-bulk-apply">Bulk preparation</Link>
           </div>
         </article>
         <article className="dashboard-card">

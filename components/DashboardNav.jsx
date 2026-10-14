@@ -8,7 +8,7 @@ const links = [
   ["/dashboard/profile", "Profile"],
   ["/dashboard/manual-apply", "Manual apply"],
   ["/dashboard/assisted-apply", "Assisted apply"],
-  ["/dashboard/direct-bulk-apply", "Direct bulk apply"],
+  ["/dashboard/direct-bulk-apply", "Bulk preparation"],
   ["/dashboard/tailor", "Resume tailoring"],
   ["/dashboard/applications", "Applications"]
 ];
@@ -38,7 +38,7 @@ export default function DashboardNav({ user }) {
       </nav>
       <div className="sidebar-footer">
         <strong>{user.email}</strong>
-        <span>Demo workspace</span>
+        <span>Your workspace</span>
         <button className="secondary-button" type="button" onClick={logout}>Logout</button>
       </div>
     </aside>

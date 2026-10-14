@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function TailorClient({ savedResumeName = "" }) {
+  const router = useRouter();
   const [resumeFile, setResumeFile] = useState(null);
   const [resumeText, setResumeText] = useState("");
   const [jobDescription, setJobDescription] = useState("");
@@ -49,6 +51,7 @@ export default function TailorClient({ savedResumeName = "" }) {
     }
 
     setResult(data.result);
+    router.refresh();
     setResumeOutputText(data.resumeTextOutput || "");
     setPdfName(data.fileName || "tailored-resume.pdf");
     setDocxName(data.docxFileName || "tailored-resume.docx");
@@ -149,7 +152,7 @@ export default function TailorClient({ savedResumeName = "" }) {
           {result && (
             <div className="dashboard-grid">
               <section>
-                <p className="eyebrow">GPT generated</p>
+                <p className="eyebrow">{result.aiUsed ? "AI generated" : "Source resume"}</p>
                 <h4>{result.candidateName}</h4>
                 <p><strong>{result.targetRole}</strong></p>
                 <p>{result.professionalSummary}</p>
@@ -195,7 +198,8 @@ export default function TailorClient({ savedResumeName = "" }) {
         </article>
 
         <article className="dashboard-card">
-          <h3>ATS score</h3>
+          <h3>Resume match analysis</h3>
+          <p>This is an estimated match to the job description, not a score from an employer's ATS. Review suggestions before making changes.</p>
           {!atsResult && <p>Upload or paste a resume to get an ATS compatibility score. Paste a JD for keyword-match scoring.</p>}
           {atsResult && (
             <div className="dashboard-grid">

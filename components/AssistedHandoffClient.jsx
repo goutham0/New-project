@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 export default function AssistedHandoffClient() {
   const searchParams = useSearchParams();
   const targetUrl = useMemo(() => safeRedirectUrl(searchParams.get("to")), [searchParams]);
-  const redirectUrl = useMemo(() => withCurrentHandoffHash(targetUrl), [targetUrl]);
+  const redirectUrl = targetUrl;
 
   useEffect(() => {
     const timer = window.setTimeout(() => {

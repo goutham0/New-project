@@ -41,8 +41,8 @@ const solutionCards = [
   ["Duplicate job detection", Layers3],
   ["Chrome extension autofill", Globe],
   ["Application tracking dashboard", BarChart3],
-  ["Recruiter-ready review notes", Handshake],
-  ["Interview preparation workspace", MessageSquare]
+  ["Downloadable PDF and DOCX resumes", FileText],
+  ["Reusable candidate profile", UserRoundCheck]
 ];
 
 const faqs = [
@@ -53,7 +53,7 @@ const faqs = [
   ["Is my resume data secure?", "Resume handling is designed around authenticated access, private downloads, audit logs, and environment-protected AI keys."],
   ["Does this work with LinkedIn, Workday, Greenhouse, Lever, and company career pages?", "ApplyFriend supports assisted workflows for many application pages. Direct apply requires official supported integrations."],
   ["What happens if a job board blocks automation?", "ApplyFriend does not bypass platform restrictions. The candidate can still use prepared documents and manual review guidance."],
-  ["What can I demo today?", "You can sign up, complete a profile, upload a resume, search live Adzuna jobs, prepare application packages, generate tailored resumes, and track submitted jobs."]
+  ["How do I get started?", "Create an account, complete your profile, and upload your resume. Then search jobs or paste a job description to prepare your first resume."]
 ];
 
 export default async function HomePage() {
@@ -65,14 +65,14 @@ export default async function HomePage() {
 
       <section className="premium-hero">
         <div className="hero-copy">
-          <p className="eyebrow">AI automation + human job-search support</p>
-          <h1>Your AI + Recruiter Job Application Partner</h1>
+          <p className="eyebrow">Your job search, organized</p>
+          <h1>ApplyFriend</h1>
           <p className="hero-subtitle">
-            Tailor resumes, autofill applications, prepare bulk applications for matched jobs, and keep every job search action organized in one clean demo workspace.
+            Find live jobs, tailor your resume to each opportunity, and prepare applications with AI. Review every detail and submit on the employer website.
           </p>
           <div className="button-row premium-cta-row">
             <Link className="primary-button" href={user ? "/dashboard" : "/signup"}>Start Applying Smarter</Link>
-            <a className="secondary-button" href="#demo">View Product Demo</a>
+            <a className="secondary-button" href="#demo">Explore the workflow</a>
           </div>
           <div className="hero-pills" aria-label="ApplyFriend platform capabilities">
             {["AI Tailored Resumes", "Assisted Apply", "Bulk Review", "Application Tracker", "Chrome Extension Autofill"].map((item) => (
@@ -92,7 +92,7 @@ export default async function HomePage() {
       </section>
 
       <section className="section premium-section solution-band">
-        <SectionHeading eyebrow="The solution" title="ApplyFriend handles the complete application workflow" copy="AI resume tailoring, assisted apply, bulk preparation, application tracking, and review-ready candidate controls work together in one serious product demo." />
+        <SectionHeading eyebrow="The solution" title="A focused workspace for your applications" copy="Bring your resume, job search, application preparation, and submission records together." />
         <div className="premium-grid three">
           {solutionCards.map(([title, Icon]) => <FeatureCard key={title} title={title} icon={Icon} />)}
         </div>
@@ -105,7 +105,7 @@ export default async function HomePage() {
             ["Upload Resume", "User uploads one master resume.", FileText],
             ["Choose Target Roles", "User selects job titles, locations, salary, visa preference, work mode, and industries.", Target],
             ["AI Tailors + Applies", "ApplyFriend tailors resumes, prepares answers, and supports assisted or bulk apply.", Sparkles],
-            ["Track Interviews", "User tracks applications, follow-ups, interviews, and interview preparation tasks.", Bell]
+            ["Track Applications", "Record the jobs you submitted and return to your application history.", Bell]
           ].map(([title, copy, Icon], index) => (
             <article className="workflow-step" key={title}>
               <span className="step-number">0{index + 1}</span>
@@ -118,14 +118,14 @@ export default async function HomePage() {
       </section>
 
       <section className="section premium-section demo-section" id="demo">
-        <SectionHeading eyebrow="Product demo" title="A working MVP flow candidates can try" copy="The demo focuses on the real product loop: profile, resume, live jobs, prepared packages, assisted handoff, direct review, and application tracking." />
+        <SectionHeading eyebrow="Your workflow" title="From your resume to your next application" copy="Create your profile, find a role, review your documents, and submit with confidence." />
         <div className="demo-grid">
           {[
             ["1", "Create profile", "Add mandatory application fields and job preferences so generated answers stay grounded in candidate-approved data."],
-            ["2", "Upload resume", "Parse a PDF, DOCX, or TXT resume, then keep it as the source of truth for ATS scoring and tailoring."],
-            ["3", "Search jobs", "Pull live Adzuna jobs, remove duplicates, and separate manual, assisted, and direct-supported workflows."],
+            ["2", "Upload resume", "Upload a PDF or DOCX resume and keep the original available for download."],
+            ["3", "Search jobs", "Search live Adzuna listings by role and location. Prepare documents or open the original application page."],
             ["4", "Prepare packages", "Generate tailored resume content, cover letter, screening answers, match score, and a review-ready PDF."],
-            ["5", "Review and submit", "Bulk jobs move through a consent screen before submission, while unsupported jobs open assisted apply handoff."],
+            ["5", "Review and submit", "Review your prepared documents, open the employer form, use the extension to fill known fields, and submit yourself."],
             ["6", "Track outcomes", "Applications stay in a simple tracker showing company, job title, status, and submitted time."]
           ].map(([number, title, copy]) => (
             <article className="demo-step-card" key={title}>
@@ -136,7 +136,7 @@ export default async function HomePage() {
           ))}
         </div>
         <div className="demo-action-row">
-          <Link className="primary-button" href={user ? "/dashboard" : "/signup"}>Open Demo Workspace</Link>
+          <Link className="primary-button" href={user ? "/dashboard" : "/signup"}>Open your workspace</Link>
           <a className="secondary-button" href="#how">See How It Works</a>
         </div>
       </section>
@@ -160,7 +160,7 @@ export default async function HomePage() {
             ["Secure resume storage", ShieldCheck],
             ["Candidate-reviewed workflow", UserRoundCheck],
             ["No job guarantee disclaimer", LockKeyhole],
-            ["Demo-first product controls", ClipboardCheck],
+            ["Candidate-controlled applications", ClipboardCheck],
             ["User controls application preferences", Filter],
             ["Privacy-first application handling", ShieldCheck]
           ].map(([title, Icon]) => (
@@ -183,7 +183,7 @@ export default async function HomePage() {
       </section>
 
       <section className="section premium-section faq-section" id="faq">
-        <SectionHeading eyebrow="FAQ" title="Questions candidates ask during the product demo" />
+        <SectionHeading eyebrow="FAQ" title="Your questions, answered" />
         <div className="faq-grid">
           {faqs.map(([question, answer]) => (
             <article className="faq-card" key={question}>
@@ -202,8 +202,7 @@ export default async function HomePage() {
         </div>
         <FooterColumn title="Product" links={["Features", "Product Demo", "Chrome Extension", "Dashboard"]} />
         <FooterColumn title="Company" links={["About", "Feedback", "Contact"]} />
-        <FooterColumn title="Resources" links={["FAQ", "Blog", "Resume Tips", "Interview Prep"]} />
-        <FooterColumn title="Legal" links={["Terms", "Privacy Policy", "Refund Policy", "Disclaimer"]} />
+        <FooterColumn title="Resources" links={["FAQ", "Resume workspace", "Application tracker"]} />
       </footer>
     </main>
   );
@@ -213,7 +212,7 @@ function DashboardPreview() {
   return (
     <div className="hero-dashboard-card" aria-label="ApplyFriend dashboard preview">
       <div className="preview-topline">
-        <span>Today</span>
+        <span>Illustrative preview</span>
         <strong>Application command center</strong>
       </div>
       <div className="dashboard-metrics">
@@ -285,10 +284,11 @@ function FeatureCard({ title, icon: Icon }) {
 }
 
 function FooterColumn({ title, links }) {
+  const destinations = { Features: "#features", "Product Demo": "#demo", "Chrome Extension": "/dashboard/assisted-apply", Dashboard: "/dashboard", About: "#about", Feedback: "#feedback", Contact: "#feedback", FAQ: "#faq", "Resume workspace": "/dashboard/tailor", "Application tracker": "/dashboard/applications" };
   return (
     <div className="footer-column">
       <h3>{title}</h3>
-      {links.map((link) => <a href={link === "Product Demo" ? "#demo" : "#home"} key={link}>{link}</a>)}
+      {links.map((link) => <a href={destinations[link]} key={link}>{link === "Product Demo" ? "Workflow" : link}</a>)}
     </div>
   );
 }

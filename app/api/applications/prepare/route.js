@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
 import { createAssistedApplyToken } from "@/lib/auth";
-import { getProfile, getLatestResume, listApplications, createApplication, addAudit } from "@/lib/store";
+import { getProfile, getLatestResume, listApplications, createApplication, updateApplication, claimApplicationPreparation, consumeRequestLimit, addAudit } from "@/lib/store";
 import { getJobById } from "@/lib/jobs";
 import { generateApplicationPackage } from "@/lib/ai";
 import { generateTailoredResume } from "@/lib/openaiResume";
 import { createResumePdf } from "@/lib/pdf";
+
+export const maxDuration = 300;
 
 const requiredFields = [
   "firstName",
@@ -31,12 +33,16 @@ const requiredFields = [
 export async function POST(request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!await consumeRequestLimit(`ai:${user.id}`, 60)) return NextResponse.json({ error: "Hourly AI limit reached. Please try again later." }, { status: 429 });
 
-  const { jobIds = [], useAi = false } = await request.json();
+  const { jobIds = [], useAi = true } = await request.json();
+  if (!Array.isArray(jobIds) || jobIds.length !== 1 || typeof jobIds[0] !== "string") {
+    return NextResponse.json({ error: "Prepare one job per request. Bulk preparation processes jobs individually." }, { status: 400 });
+  }
   const uniqueJobIds = [...new Set(Array.isArray(jobIds) ? jobIds : [])];
   const profile = await getProfile(user.id);
   const resume = await getLatestResume(user.id);
-  const missing = requiredFields.filter((field) => !String(profile[field] || "").trim());
+  const missing = requiredFields.filter((field) => !String(profile[field] ?? "").trim());
   if (missing.length || !resume) {
     return NextResponse.json({ error: "Profile and resume must be complete.", missing }, { status: 400 });
   }
@@ -46,22 +52,26 @@ export async function POST(request) {
   for (const jobId of uniqueJobIds) {
     const job = await getJobById(jobId);
     if (!job) continue;
-    if (job.applyType === "manual") continue;
 
     const existing = existingApplications.find((item) => item.jobId === job.id);
-    if (existing) {
+    if (existing && !["DRAFT", "PREPARING", "FAILED"].includes(existing.status)) {
       applications.push(withAssistedHandoff(user, {
         ...existing,
         alreadyPrepared: true,
-        alreadySubmitted: existing.status === "SUBMITTED"
+        alreadySubmitted: ["SUBMITTED", "MANUAL_SUBMITTED"].includes(existing.status)
       }));
       continue;
     }
 
+    const draft = existing || await createApplication({ userId: user.id, jobId: job.id, applicationType: "ASSISTED", status: "DRAFT", matchScore: null, package: { job } });
+    if (!await claimApplicationPreparation(user.id, draft.id)) {
+      return NextResponse.json({ error: "This application is already preparing. Wait for the current request to finish before retrying." }, { status: 409 });
+    }
     let pkg;
     try {
-      pkg = await buildPreparedPackage({ profile, resumeText: resume.content, job, useAi });
+      pkg = await buildPreparedPackage({ profile, resumeText: resume.content, job, useAi: true });
     } catch (error) {
+      await updateApplication(user.id, draft.id, { status: "FAILED", failureReason: "Application preparation failed. Retry to prepare again." }, { expectedStatus: "PREPARING" });
       console.error("buildPreparedPackage error:", error);
       await addAudit({
         userId: user.id,
@@ -70,16 +80,17 @@ export async function POST(request) {
         metadata: { jobId, reason: error.message }
       });
       return NextResponse.json({
-        error: "GPT application preparation is not active yet.",
+        error: "Application preparation failed. Your resume and profile are still saved.",
         detail: error.message,
         fix: "Add OPENAI_API_KEY and OPENAI_MODEL in your environment variables, redeploy/restart, then prepare applications again."
       }, { status: 503 });
     }
-    let application = await createApplication({
+    let application = await updateApplication(user.id, draft.id, {
       userId: user.id,
       jobId: job.id,
       applicationType: job.directApplySupported ? "DIRECT" : "ASSISTED",
       status: "NEEDS_REVIEW",
+      failureReason: null,
       matchScore: pkg.matchScore,
       package: {
         ...pkg,
@@ -93,7 +104,7 @@ export async function POST(request) {
           directApplySupported: job.directApplySupported
         }
       }
-    });
+    }, { expectedStatus: "PREPARING" });
     applications.push(withAssistedHandoff(user, application));
   }
 
@@ -125,14 +136,7 @@ async function buildPreparedPackage({ profile, resumeText, job, useAi }) {
       skipAi: !useAi
     });
   } catch (error) {
-    console.warn("generateTailoredResume failed, using local fallback:", error.message);
-    tailored = await generateTailoredResume({
-      resumeText,
-      jobDescription: buildJobDescription(job),
-      profile,
-      requireAi: false,
-      skipAi: true
-    });
+    throw error;
   }
   const pdf = createResumePdf(tailored);
 
@@ -150,6 +154,7 @@ async function buildPreparedPackage({ profile, resumeText, job, useAi }) {
     coverLetter: tailored.coverLetter || fallback.coverLetter,
     answers: normalizeAnswers({
       jobQuestions: job.questions || [],
+      profile,
       generatedAnswers: tailored.screeningAnswers || [],
       fallbackAnswers: fallback.answers || []
     }),
@@ -175,7 +180,7 @@ function buildJobDescription(job) {
   ].join("\n");
 }
 
-function normalizeAnswers({ jobQuestions, generatedAnswers, fallbackAnswers }) {
+function normalizeAnswers({ jobQuestions, generatedAnswers, fallbackAnswers, profile }) {
   if (!jobQuestions.length) {
     return generatedAnswers.map((item) => ({
       question: item.question,
@@ -186,6 +191,13 @@ function normalizeAnswers({ jobQuestions, generatedAnswers, fallbackAnswers }) {
 
   return jobQuestions.map((question, index) => {
     const normalizedQuestion = question.toLowerCase();
+    const sensitiveAnswer = /sponsor/.test(normalizedQuestion) ? profile.sponsorshipRequired
+      : /authoriz|legally.*work/.test(normalizedQuestion) ? profile.workAuthorization
+      : /salary|compensation/.test(normalizedQuestion) ? [profile.expectedSalaryMin, profile.expectedSalaryMax].filter(Boolean).join(" - ")
+      : /relocat/.test(normalizedQuestion) ? profile.willingToRelocate : undefined;
+    if (/sponsor|authoriz|legally.*work|salary|compensation|relocat|gender|ethnic|race|disabil|veteran/.test(normalizedQuestion)) {
+      return { question, answer: sensitiveAnswer === undefined || sensitiveAnswer === "" ? "Candidate must confirm." : String(sensitiveAnswer), confidence: 1, requiresUserConfirmation: true };
+    }
     const generated =
       generatedAnswers.find((item) => String(item.question || "").toLowerCase() === normalizedQuestion) ||
       generatedAnswers.find((item) => {

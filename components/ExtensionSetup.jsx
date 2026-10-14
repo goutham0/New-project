@@ -11,7 +11,7 @@ export default function ExtensionSetup() {
         <span>2. Open chrome://extensions and turn on Developer mode.</span>
         <span>3. Click Load unpacked and select the unzipped extension folder.</span>
         <span>4. Click Prepare and open on any assisted job.</span>
-        <span>5. The extension will detect the prepared job and autofill. You can also click the extension icon and press Autofill page.</span>
+        <span>5. On the employer form, click the extension icon and press Autofill page. Review the filled fields and upload your resume.</span>
         <span>6. After you manually submit, click Mark submitted in the extension popup to record the application.</span>
       </div>
     </div>

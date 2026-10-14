@@ -16,23 +16,10 @@ document.querySelector("#autofill").addEventListener("click", async () => {
 document.querySelector("#markSubmitted").addEventListener("click", async () => {
   try {
     statusEl.textContent = "Recording assisted submission...";
-    const stored = await chrome.storage.sync.get([
-      "applyFriendBaseUrl",
-      "applyFriendHandoffToken"
-    ]);
-    const baseUrl = stored.applyFriendBaseUrl;
-    const token = stored.applyFriendHandoffToken;
-    if (!baseUrl || !token) {
-      throw new Error("No prepared assisted application found. Open the job from Apply Friend first.");
-    }
-    const response = await fetch(`${baseUrl}/api/extension/mark-submitted`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token })
-    });
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const response = await chrome.runtime.sendMessage({ type: "APPLYFRIEND_MARK_SUBMITTED", tabId: tab?.id });
     if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      throw new Error(data.error || "Unable to mark submitted.");
+      throw new Error(response.error || "Unable to mark submitted.");
     }
     statusEl.textContent = "Recorded as submitted in Apply Friend.";
   } catch (error) {

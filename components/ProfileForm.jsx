@@ -47,10 +47,11 @@ export default function ProfileForm({ initialProfile, initialResume }) {
   async function save(event) {
     event.preventDefault();
     setBusy(true);
+    try {
     const response = await fetch("/api/candidate/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ profile, plan: "Demo Access" })
+      body: JSON.stringify({ profile })
     });
     const data = await response.json();
     setBusy(false);
@@ -60,14 +61,18 @@ export default function ProfileForm({ initialProfile, initialResume }) {
     }
     setStatus("Profile saved.");
     router.refresh();
+    } catch { setStatus("Unable to save profile. Please try again."); }
+    finally { setBusy(false); }
   }
 
   async function uploadResume(event) {
     const file = event.target.files?.[0];
     if (!file) return;
+    if (file.size > 4 * 1024 * 1024) { setStatus("Resume upload failed: maximum size is 4 MB."); return; }
     setStatus("Uploading resume...");
     const formData = new FormData();
     formData.append("resume", file);
+    try {
     const response = await fetch("/api/resumes/upload", { method: "POST", body: formData });
     const data = await response.json();
     if (!response.ok) {
@@ -77,14 +82,16 @@ export default function ProfileForm({ initialProfile, initialResume }) {
     setResume(data.resume);
     setStatus("Resume uploaded and parsed.");
     router.refresh();
+    } catch { setStatus("Resume upload failed. Please try again."); }
   }
 
   return (
     <div className="dashboard-grid">
       <article className="dashboard-card">
         <h3>Resume upload</h3>
-        <p>{resume ? `Current resume: ${resume.fileName}` : "Upload a PDF, DOCX, or TXT resume."}</p>
-        <input type="file" accept=".pdf,.doc,.docx,.txt" onChange={uploadResume} />
+        <p>{resume ? `Current resume: ${resume.fileName}` : "Upload a PDF or DOCX resume (maximum 4 MB)."}</p>
+        <input aria-label="Upload original resume" type="file" accept=".pdf,.docx" onChange={uploadResume} />
+        {resume?.originalFilePath && <a className="secondary-button" href={`/api/resumes/${resume.id}?download=1`}>Download original</a>}
       </article>
 
       <form className="form-grid two dashboard-card" onSubmit={save}>
@@ -101,7 +108,7 @@ export default function ProfileForm({ initialProfile, initialResume }) {
         {field("State", "state", profile, update, true)}
         {field("Zip code", "zipCode", profile, update)}
         {field("Country", "country", profile, update, true)}
-        {select("Work authorization", "workAuthorization", profile, update, ["Authorized to work in the US", "US citizen", "Permanent resident", "Requires confirmation"], true)}
+        {select("Work authorization", "workAuthorization", profile, update, ["Authorized to work in the US", "US citizen", "Permanent resident", "Not authorized", "Requires confirmation"], true)}
         {select("Sponsorship required", "sponsorshipRequired", profile, update, ["No", "Yes", "Candidate must confirm"], true)}
         {field("Current company", "currentCompany", profile, update)}
         {field("Current title", "currentTitle", profile, update, true)}

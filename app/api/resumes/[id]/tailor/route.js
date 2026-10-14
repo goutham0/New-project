@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
-import { addAudit, getProfile, getResumeById, saveTailoredResume } from "@/lib/store";
+import { addAudit, getProfile, getResumeById, saveTailoredResume, consumeRequestLimit } from "@/lib/store";
 import { saveFileBuffer, sha256 } from "@/lib/fileStorage";
 import { tailorResumeToDocx } from "@/lib/resumePipeline";
+export const maxDuration = 300;
 
 export async function POST(request, { params }) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!await consumeRequestLimit(`ai:${user.id}`, 60)) return NextResponse.json({ error: "Hourly AI limit reached. Please try again later." }, { status: 429 });
 
   const { id } = await params;
   const resume = await getResumeById(user.id, id);

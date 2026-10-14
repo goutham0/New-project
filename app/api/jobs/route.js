@@ -10,7 +10,7 @@ export async function GET(request) {
   const query = searchParams.get("q") || "";
   const where = searchParams.get("where") || "";
   const page = searchParams.get("page") || "1";
-  const jobs = [...filterSampleJobs({ mode, query })];
+  const jobs = process.env.ENABLE_DEMO_JOBS === "true" ? filterSampleJobs({ mode, query }).map((job) => ({ ...job, directApplySupported: false, applyType: mode === "manual" ? "manual" : "assisted", source: "Demo" })) : [];
   const sourceStatus = { adzuna: "skipped" };
 
   try {
@@ -28,5 +28,5 @@ export async function GET(request) {
 
   const dedupedJobs = dedupeJobs(jobs);
   sourceStatus.deduped = jobs.length - dedupedJobs.length;
-  return NextResponse.json({ jobs: dedupedJobs, sourceStatus });
+  return NextResponse.json({ jobs: dedupedJobs, sourceStatus, page: Number(page) || 1, hasMore: sourceStatus.adzuna === "live" && Number(page) * Number(process.env.ADZUNA_RESULTS_PER_PAGE || 20) < sourceStatus.adzunaCount });
 }

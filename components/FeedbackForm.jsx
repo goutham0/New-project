@@ -12,8 +12,10 @@ export default function FeedbackForm() {
     event.preventDefault();
     setBusy(true);
     setStatus("");
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const payload = Object.fromEntries(formData.entries());
+    try {
     const response = await fetch("/api/feedback", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -25,8 +27,13 @@ export default function FeedbackForm() {
       setStatus(data.error || "Unable to submit feedback right now.");
       return;
     }
-    event.currentTarget.reset();
+    form.reset();
     setStatus("Thanks for your feedback. Our team will review it.");
+    } catch {
+      setStatus("Unable to submit feedback. Check your connection and try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (

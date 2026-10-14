@@ -7,6 +7,15 @@ export async function POST(request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { applicationIds = [], action = "submit", consentConfirmed = false } = await request.json();
+  if (!["approve", "assist", "manual", "submit"].includes(action)) {
+    return NextResponse.json({ error: "Invalid action." }, { status: 400 });
+  }
+  if (action === "submit") {
+    return NextResponse.json({ error: "Direct submission is not connected to an employer API. Submit on the employer website, then mark your application submitted." }, { status: 409 });
+  }
+  if (action === "approve" && consentConfirmed !== true) {
+    return NextResponse.json({ error: "Review and consent are required before approval." }, { status: 400 });
+  }
   if (!Array.isArray(applicationIds) || !applicationIds.length) {
     return NextResponse.json({ error: "Select at least one prepared application before submitting." }, { status: 400 });
   }
@@ -18,7 +27,7 @@ export async function POST(request) {
     const application = existing.find((item) => item.id === applicationId);
     if (!application) continue;
 
-    if (application.status === "SUBMITTED") {
+    if (["SUBMITTED", "MANUAL_SUBMITTED"].includes(application.status)) {
       skipped.push({
         id: application.id,
         jobId: application.jobId,
@@ -29,7 +38,10 @@ export async function POST(request) {
     }
 
     if (action === "approve") {
-      updated.push(await updateApplication(user.id, applicationId, { status: "APPROVED" }));
+      if (!["NEEDS_REVIEW", "APPROVED"].includes(application.status)) {
+        return NextResponse.json({ error: "Application must be prepared before approval." }, { status: 409 });
+      }
+      updated.push(await updateApplication(user.id, applicationId, { status: "APPROVED", package: { ...application.package, consentConfirmedAt: new Date().toISOString() } }));
       continue;
     }
 
@@ -41,8 +53,8 @@ export async function POST(request) {
     if (action === "manual") {
       updated.push(
         await updateApplication(user.id, applicationId, {
-          status: "SUBMITTED",
-          externalApplicationId: `MANUAL-${Math.floor(Math.random() * 900000 + 100000)}`
+          status: "MANUAL_SUBMITTED",
+          package: { ...application.package, submittedAt: new Date().toISOString(), submissionSource: "candidate_confirmation" }
         })
       );
       continue;
@@ -69,15 +81,6 @@ export async function POST(request) {
       continue;
     }
 
-    updated.push(
-      await updateApplication(user.id, applicationId, {
-        status: "SUBMITTED",
-        externalApplicationId:
-          application.applicationType === "DIRECT"
-            ? `MOCK-ATS-${Math.floor(Math.random() * 900000 + 100000)}`
-            : `MANUAL-${Math.floor(Math.random() * 900000 + 100000)}`
-      })
-    );
   }
 
   await addAudit({

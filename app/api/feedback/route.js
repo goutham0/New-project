@@ -13,7 +13,7 @@ export async function POST(request) {
   const rating = Math.max(1, Math.min(5, Number(body.rating) || 5));
   const message = String(body.message || "").trim();
 
-  if (!name || !email || !message) {
+  if (!name || name.length > 200 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || !message || message.length > 10000) {
     return NextResponse.json({ error: "Name, email, and message are required." }, { status: 400 });
   }
 
@@ -36,10 +36,10 @@ export async function POST(request) {
   } catch (error) {
     console.warn("Feedback storage failed:", error.message);
     return NextResponse.json({
-      ok: true,
+      ok: false,
       stored: false,
-      warning: "Feedback received, but storage is temporarily unavailable."
-    }, { status: 202 });
+      error: "Unable to save your feedback right now. Please try again."
+    }, { status: 503 });
   }
 
   return NextResponse.json({ ok: true, stored: true, feedbackId: feedback.id });

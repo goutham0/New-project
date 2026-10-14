@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@/lib/auth";
-import { getLatestResume, addAudit } from "@/lib/store";
+import { getLatestResume, addAudit, consumeRequestLimit } from "@/lib/store";
 import { extractResumeText } from "@/lib/resumeText";
 import { scoreResumeForAts } from "@/lib/openaiResume";
+export const maxDuration = 120;
 
 export async function POST(request) {
   const user = await currentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!await consumeRequestLimit(`ai:${user.id}`, 60)) return NextResponse.json({ error: "Hourly AI limit reached. Please try again later." }, { status: 429 });
 
   const formData = await request.formData();
   const file = formData.get("resume");
@@ -14,7 +16,8 @@ export async function POST(request) {
   const pastedResumeText = String(formData.get("resumeText") || "").trim();
   let resumeText = "";
   if (file && typeof file !== "string") {
-    resumeText = await extractResumeText(file);
+    try { resumeText = await extractResumeText(file); }
+    catch (error) { return NextResponse.json({ error: error.message }, { status: 422 }); }
     if (!resumeText.trim()) resumeText = pastedResumeText;
   } else {
     resumeText = pastedResumeText;
