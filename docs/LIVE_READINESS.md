@@ -31,6 +31,7 @@ The live tests passed locally against configured Neon, Adzuna and OpenAI service
 
 ## Remaining launch work
 
+- Next.js is patched to 16.3.8 and compatible security fixes are installed. npm audit still reports a moderate sprintf-js advisory through mammoth's argparse CLI dependency. The application uses mammoth's library API, not that CLI; monitor the upstream fix. Do not use npm audit fix --force to downgrade the DOCX parser.
 - Direct submission requires an authorized ATS connector with employer credentials and verified response handling.
 - Extension installation uses Load unpacked until a Chrome Web Store listing is published. Custom widgets, cross-origin iframes, closed shadow roots and file upload fields may require manual input. Real employer-site coverage must be tested with candidate consent.
 - No email delivery, password reset, email verification, recruiter service, interview scheduling, two-factor authentication or operational admin dashboard is implemented in this release. Do not advertise those as available.
